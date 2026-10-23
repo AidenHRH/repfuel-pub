@@ -10,6 +10,7 @@ import { ReminderSync } from '@/features/reminders/ReminderSync';
 import { getSetting } from '@/database/repositories/settingsRepository';
 import { ThemeProvider, useTheme } from '@/theme/ThemeProvider';
 import type { ThemeName } from '@/theme/tokens';
+import { CloudSync } from '@/features/cloud/CloudSync';
 import { SetupGate } from '@/features/setup/SetupGate';
 import { TourProvider } from '@/features/tour/TourProvider';
 
@@ -80,6 +81,7 @@ export default function RootLayout() {
         <DatabaseProvider>
           <AppearanceGate>
             <ReminderSync />
+            <CloudSync />
             <NavigationTheme>
               <SetupGate>
                 <TourProvider>

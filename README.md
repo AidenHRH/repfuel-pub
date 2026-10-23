@@ -8,7 +8,7 @@ Your personal performance assistant: a calm, offline-first Android app for track
 ## What's in this version (Stage 1: foundation)
 
 - The five tabs (Today, Nutrition, Workouts, Progress, Settings), built in the approved design: dark by default, Inter type, calm cards.
-- An on-phone SQLite database that's set up automatically on first launch, and a welcome setup on first open: your age, height, weight and goal, and realistic suggested calorie and protein targets.
+- An on-phone SQLite database that's set up automatically on first launch, a welcome setup on first open, and optional cloud backup (Supabase; see `docs/cloud-backup-setup.md`). The welcome asks for your age, height, weight and goal, and realistic suggested calorie and protein targets.
 - Settings shows your saved targets and lets you switch Dark/Light (remembered between launches).
 - Tested nutrition maths (servings, per-100 g/ml, unknown values stay unknown, local-day boundaries across clock changes), ready for food logging in Stage 2.
 

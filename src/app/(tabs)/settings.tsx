@@ -18,6 +18,7 @@ import { nutritionEvents } from '@/features/nutrition/events';
 import { safely } from '@/features/safely';
 import { ReminderSettings } from '@/features/reminders/ReminderSettings';
 import { BackupSettings } from '@/features/settings/BackupSettings';
+import { CloudBackupSettings } from '@/features/settings/CloudBackupSettings';
 import { useSetting } from '@/features/useSetting';
 import { useTheme } from '@/theme/ThemeProvider';
 import { spacing, type ThemeName } from '@/theme/tokens';
@@ -114,6 +115,7 @@ export default function SettingsScreen() {
 
       <ReminderSettings />
 
+      <CloudBackupSettings />
       <BackupSettings />
 
       <HelpSettings />

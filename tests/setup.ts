@@ -69,6 +69,9 @@ jest.mock('expo-file-system', () => {
     async text() {
       return store.get(this.uri) ?? '';
     }
+    async bytes() {
+      return new TextEncoder().encode(store.get(this.uri) ?? '');
+    }
     get exists() {
       return store.has(this.uri);
     }
@@ -104,3 +107,17 @@ jest.mock('expo-image-picker', () => ({
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
 }));
 jest.mock('expo-keep-awake', () => ({ useKeepAwake: jest.fn() }));
+
+// The backup server: a signed-out in-memory stand-in. Tests that sign in swap it with __setFake(fakeCloud(...)).
+jest.mock('@/services/cloud', () => {
+  const types = jest.requireActual('@/services/cloud/types');
+  const { fakeCloud } = jest.requireActual('./helpers/fakeCloud');
+  let current = fakeCloud(null);
+  return {
+    ...types,
+    getCloud: () => current.cloud,
+    __setFake: (next: ReturnType<typeof fakeCloud>) => {
+      current = next;
+    },
+  };
+});
