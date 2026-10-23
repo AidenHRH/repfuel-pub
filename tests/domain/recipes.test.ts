@@ -51,7 +51,10 @@ describe('recipePortionNutrients', () => {
 
   test('an approximate ingredient makes the recipe approximate, even through a batch', () => {
     const roughPico = food('pico-mix', 'per_serving', { kcal: 120, proteinG: 4 }, { dataSource: 'user_approximate' });
-    const { isApproximate } = recipePortionNutrients('beef-dinner', lookupOf([sweetPotato, beef, roughPico], [pico, beefDinner(1)]));
+    const { isApproximate } = recipePortionNutrients(
+      'beef-dinner',
+      lookupOf([sweetPotato, beef, roughPico], [pico, beefDinner(1)]),
+    );
     expect(isApproximate).toBe(true);
   });
 

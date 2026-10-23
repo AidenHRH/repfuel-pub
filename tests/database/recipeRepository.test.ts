@@ -25,11 +25,9 @@ test('ingredients round-trip in order, including recipe portions', async () => {
   const db = await migratedDb();
   const { beefDinner, pico } = await seedRegulars(db);
   const loaded = await getRecipe(db, beefDinner.id);
-  expect(loaded?.ingredients.map((i) => (i.kind === 'recipe' ? `${i.subRecipeId}:${i.portions}` : `${i.amount}${i.unit}`))).toEqual([
-    '250g',
-    '150g',
-    `${pico.id}:1`,
-  ]);
+  expect(
+    loaded?.ingredients.map((i) => (i.kind === 'recipe' ? `${i.subRecipeId}:${i.portions}` : `${i.amount}${i.unit}`)),
+  ).toEqual(['250g', '150g', `${pico.id}:1`]);
 });
 
 test('deleting a food a recipe uses keeps the recipe working', async () => {
@@ -103,7 +101,17 @@ test('changing a food from per serving to per 100 g never breaks the meals that 
   expect(picks.map((p: { name: string }) => p.name)).toEqual(['Overnight oats']);
 });
 
-const quick = { name: 'Gousto chicken katsu', brand: null, barcode: null, basis: 'per_serving' as const, servingSize: null, servingUnit: null, nutrients: { kcal: 650, proteinG: 42, carbsG: null, fatG: null, fibreG: null }, dataSource: 'user_approximate' as const, notes: null };
+const quick = {
+  name: 'Gousto chicken katsu',
+  brand: null,
+  barcode: null,
+  basis: 'per_serving' as const,
+  servingSize: null,
+  servingUnit: null,
+  nutrients: { kcal: 650, proteinG: 42, carbsG: null, fatG: null, fibreG: null },
+  dataSource: 'user_approximate' as const,
+  notes: null,
+};
 
 test('a quick meal saved as a meal becomes a starred one-portion meal', async () => {
   const db = await migratedDb();

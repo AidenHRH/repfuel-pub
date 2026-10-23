@@ -1,3 +1,4 @@
+import { dayEffort } from '@/domain/training';
 import { groupFeedByDay, weekSummary, type FeedItem } from '@/domain/training';
 
 const now = new Date('2026-10-22T19:00:00'); // Thursday evening, local time
@@ -49,4 +50,22 @@ test('the feed is grouped by day, newest first, with weekday names this week', (
   const groups = groupFeedByDay(items, now);
   expect(groups.map((g) => g.label)).toEqual(['Today', 'Tuesday', 'Monday', 'Mon 12 Oct']);
   expect(groups[2].items.map((i) => (i.kind === 'lift' ? i.lift.exerciseName : ''))).toEqual(['Plank', 'Ab wheel rollout']);
+});
+
+test('a day’s effort averages every rated set and class', () => {
+  const lift = (efforts: (number | null)[]) => ({
+    kind: 'lift' as const,
+    isPr: false,
+    lift: {
+      workoutId: 'w',
+      exerciseId: 'e',
+      exerciseName: 'Bench',
+      at: '2026-10-20T18:00:00Z',
+      notes: null,
+      sets: efforts.map((effort) => ({ weightKg: 80, reps: 8, effort })),
+    },
+  });
+  const cls = { kind: 'class' as const, session: { effort: 9 } } as never;
+  expect(dayEffort([lift([7, 8, null]), cls])).toBe(8);
+  expect(dayEffort([lift([null])])).toBeNull();
 });

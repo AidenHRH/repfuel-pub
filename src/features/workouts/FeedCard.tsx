@@ -4,8 +4,9 @@ import { PrBadge } from '@/components/PrBadge';
 import { Text } from '@/components/Text';
 import { durationLabel, effortLabel } from '@/domain/classes';
 import { localTimeLabel } from '@/domain/dates';
-import { liftSummary, setsLabel } from '@/domain/lifts';
+import { effortLine, liftSummary, setsLabel } from '@/domain/lifts';
 import type { FeedItem } from '@/domain/training';
+import { effortColor } from '@/features/progress/parts';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, spacing } from '@/theme/tokens';
 
@@ -38,11 +39,12 @@ export function FeedCard({
   onLongPress: () => void;
   first: boolean;
 }) {
-  const { colors } = useTheme();
+  const { colors, name: theme } = useTheme();
+  const effort = item.kind === 'lift' ? effortLine(item.lift.sets) : null;
   const name = item.kind === 'lift' ? item.lift.exerciseName : item.session.className;
   const summary =
     item.kind === 'lift'
-      ? liftSummary(item.lift.sets)
+      ? [liftSummary(item.lift.sets), effort?.text, effort?.hint].filter(Boolean).join(', ')
       : [durationLabel(item.session.durationMin), item.session.effort ? `effort ${item.session.effort} of 10` : null]
           .filter(Boolean)
           .join(', ');
@@ -73,9 +75,39 @@ export function FeedCard({
         </Text>
       </View>
       {item.kind === 'lift' ? (
-        <Text variant="callout" color="text2" numeric>
-          {setsLabel(item.lift.sets)}
-        </Text>
+        <>
+          <Text variant="callout" color="text2" numeric>
+            {setsLabel(item.lift.sets)}
+          </Text>
+          {effort ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
+              <View
+                style={{ flexDirection: 'row', gap: 3 }}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants">
+                {item.lift.sets.map((s, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      width: 22,
+                      height: 8,
+                      borderRadius: 3,
+                      backgroundColor: s.effort == null ? colors.track : effortColor(theme, s.effort),
+                    }}
+                  />
+                ))}
+              </View>
+              <Text variant="caption" numeric style={{ fontFamily: fonts.semibold, color: colors.text2 }}>
+                {effort.text}
+              </Text>
+              {effort.hint ? (
+                <Text variant="caption" style={{ color: colors.up }}>
+                  {effort.hint}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+        </>
       ) : (
         <>
           {item.session.effort ? (

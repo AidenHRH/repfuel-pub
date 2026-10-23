@@ -79,6 +79,11 @@ Design: `docs/superpowers/specs/2026-10-22-redesign-coaching-health-design.md`; 
 - Done (0.21): cloud backup with Supabase (`docs/superpowers/specs/2026-10-23-cloud-backup-design.md`): sign in
   with an email and password; data and recipe photos back up to your own private folder when the app opens online and with
   Sync now; 14 days kept; Restore from cloud (offered on a new phone). Setup: `docs/cloud-backup-setup.md`.
+- Done (0.22): progress charts (`docs/superpowers/specs/2026-10-23-progress-charts-design.md`): Progress has
+  Overview (workouts, weight lifted, average effort, new PRs; effort and weight-lifted charts; sets per muscle; your
+  lifts), Lifts and Records, and search with muscle chips; a lift's page (1RM, heaviest, volume or effort, with
+  effort-coloured dots; same weight getting easier; sessions with each set's effort); a muscle's page (strength,
+  sets and effort, current PRs, lifts, workouts); the Workouts history shows each lift's effort and each day's.
 - Next: Health Connect with a Health screen
   (smart scales, fitness trackers, running apps), then plans and coaching inside your training split.
 - Owner request (2026-10-22), being designed: meal prep as a recipe browser, "like Gousto but our own": browse

@@ -77,3 +77,15 @@ export function groupFeedByDay(items: FeedItem[], now: Date): { day: string; lab
   }
   return groups;
 }
+
+/** The average effort of a day's rated sets and classes, to one decimal; null when nothing was rated. */
+export function dayEffort(items: FeedItem[]): number | null {
+  const efforts = items.flatMap((item) =>
+    item.kind === 'lift'
+      ? item.lift.sets.flatMap((s) => (s.effort == null ? [] : [s.effort]))
+      : item.session.effort == null
+        ? []
+        : [item.session.effort],
+  );
+  return efforts.length ? Math.round((efforts.reduce((a, b) => a + b, 0) / efforts.length) * 10) / 10 : null;
+}

@@ -1,7 +1,8 @@
 import { reminderTimes, timeLabel, shiftTime } from '@/domain/reminders';
 
 const at = (iso: string) => new Date(iso);
-const local = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${timeLabel(d.getHours(), d.getMinutes())}`;
+const local = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${timeLabel(d.getHours(), d.getMinutes())}`;
 
 test('the next two weeks of reminders at the chosen local time, starting today if it is still ahead', () => {
   const times = reminderTimes({ hour: 8, minute: 30, now: at('2026-10-22T06:00:00Z'), takenToday: false }); // 07:00 London
@@ -11,8 +12,12 @@ test('the next two weeks of reminders at the chosen local time, starting today i
 });
 
 test('starts tomorrow once today’s time has passed, or it was already taken', () => {
-  expect(local(reminderTimes({ hour: 8, minute: 0, now: at('2026-10-22T09:00:00Z'), takenToday: false })[0])).toBe('2026-10-23 08:00');
-  expect(local(reminderTimes({ hour: 20, minute: 0, now: at('2026-10-22T09:00:00Z'), takenToday: true })[0])).toBe('2026-10-23 20:00');
+  expect(local(reminderTimes({ hour: 8, minute: 0, now: at('2026-10-22T09:00:00Z'), takenToday: false })[0])).toBe(
+    '2026-10-23 08:00',
+  );
+  expect(local(reminderTimes({ hour: 20, minute: 0, now: at('2026-10-22T09:00:00Z'), takenToday: true })[0])).toBe(
+    '2026-10-23 20:00',
+  );
 });
 
 test('keeps the local time across the clocks going back', () => {

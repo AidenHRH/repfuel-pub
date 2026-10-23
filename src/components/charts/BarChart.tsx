@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 
 import { useTheme } from '@/theme/ThemeProvider';
+import { fonts } from '@/theme/tokens';
 
 const X_LABELS = 16;
 

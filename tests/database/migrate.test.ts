@@ -86,7 +86,11 @@ describe('schema constraints', () => {
 
   test('rejects an effort rating outside 1–10', async () => {
     const db = await migrated();
-    await db.run(`INSERT INTO workout (id, name, started_at, created_at, updated_at) VALUES ('w1', 'Push A', ?, ?, ?)`, [now, now, now]);
+    await db.run(`INSERT INTO workout (id, name, started_at, created_at, updated_at) VALUES ('w1', 'Push A', ?, ?, ?)`, [
+      now,
+      now,
+      now,
+    ]);
     await db.run(
       `INSERT INTO exercise (id, name, muscle_group, equipment, is_custom, created_at) VALUES ('x1', 'Bench press', 'chest', 'barbell', 0, ?)`,
       [now],

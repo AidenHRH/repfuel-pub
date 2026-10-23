@@ -15,8 +15,14 @@ function withCheckDigit(twelve: string): string {
 
 function ean13Modules(code: string): string {
   const d = [...code].map(Number);
-  const left = d.slice(1, 7).map((n, i) => (PARITY[d[0]][i] === 'L' ? L[n] : G[n])).join('');
-  const right = d.slice(7).map((n) => R[n]).join('');
+  const left = d
+    .slice(1, 7)
+    .map((n, i) => (PARITY[d[0]][i] === 'L' ? L[n] : G[n]))
+    .join('');
+  const right = d
+    .slice(7)
+    .map((n) => R[n])
+    .join('');
   return `101${left}01010${right}101`;
 }
 

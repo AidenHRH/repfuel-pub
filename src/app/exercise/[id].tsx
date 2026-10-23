@@ -120,8 +120,8 @@ export default function HowToScreen() {
           ) : (
             <>
               <Text variant="callout" color="text2">
-                Find a video you like (from a gym, coach or any channel you trust), copy its link and add it here. It plays in RepFuel
-                from then on.
+                Find a video you like (from a gym, coach or any channel you trust), copy its link and add it here. It plays in
+                RepFuel from then on.
               </Text>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
                 <Button

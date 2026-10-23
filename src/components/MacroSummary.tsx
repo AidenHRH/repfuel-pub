@@ -40,7 +40,9 @@ export function MacroSummary({ totals, targets }: Props) {
             value={`${approx}${roundForDisplay(kcal, 'kcal')}`}
             target={`/ ${roundForDisplay(targets.caloriesKcal, 'kcal')}`}
             color="kcal"
-            remaining={kcalLeft >= 0 ? `${roundForDisplay(kcalLeft, 'kcal')} kcal left` : `${roundForDisplay(-kcalLeft, 'kcal')} kcal over`}
+            remaining={
+              kcalLeft >= 0 ? `${roundForDisplay(kcalLeft, 'kcal')} kcal left` : `${roundForDisplay(-kcalLeft, 'kcal')} kcal over`
+            }
           />
           <Metric
             label="Protein"

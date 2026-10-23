@@ -76,7 +76,13 @@ describe('nutrition targets', () => {
   test('effective dates must be full ISO timestamps so they sort correctly', async () => {
     const db = await migrated();
     await expect(
-      setTargets(db, { caloriesKcal: 2300, proteinGrams: 150, carbohydratesGrams: null, fatGrams: null, effectiveFrom: '2026-10-21' }),
+      setTargets(db, {
+        caloriesKcal: 2300,
+        proteinGrams: 150,
+        carbohydratesGrams: null,
+        fatGrams: null,
+        effectiveFrom: '2026-10-21',
+      }),
     ).rejects.toThrow(/CHECK/);
   });
 });

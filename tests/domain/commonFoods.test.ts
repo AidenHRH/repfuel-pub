@@ -22,13 +22,21 @@ test.each(COMMON_FOODS.filter((f) => !['lager', 'red-wine'].includes(f.id)).map(
 );
 
 test('search puts names starting with the words first, and finds aliases', () => {
-  expect(searchCommonFoods('egg').map((f) => f.name).slice(0, 2)).toEqual(['Egg', 'Egg white']);
+  expect(
+    searchCommonFoods('egg')
+      .map((f) => f.name)
+      .slice(0, 2),
+  ).toEqual(['Egg', 'Egg white']);
   expect(searchCommonFoods('blueb').map((f) => f.id)).toEqual(['blueberries']);
-  expect(searchCommonFoods('berries').map((f) => f.id)).toEqual(expect.arrayContaining(['blueberries', 'raspberries', 'strawberries']));
+  expect(searchCommonFoods('berries').map((f) => f.id)).toEqual(
+    expect.arrayContaining(['blueberries', 'raspberries', 'strawberries']),
+  );
   expect(searchCommonFoods('beer').map((f) => f.id)).toEqual(['lager']);
   expect(searchCommonFoods('b')).toEqual([]);
   expect(searchCommonFoods('latte')[0].id).toBe('latte');
-  expect(searchCommonFoods('coffee').map((f) => f.id)).toEqual(expect.arrayContaining(['latte', 'cappuccino', 'flat-white', 'americano']));
+  expect(searchCommonFoods('coffee').map((f) => f.id)).toEqual(
+    expect.arrayContaining(['latte', 'cappuccino', 'flat-white', 'americano']),
+  );
 });
 
 test('carbs exclude fibre, as on UK labels', () => {

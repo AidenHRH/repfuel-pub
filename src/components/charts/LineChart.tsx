@@ -4,6 +4,7 @@ import Svg, { Circle, Line, Polyline, Text as SvgText } from 'react-native-svg';
 
 import { niceBounds, plot } from '@/domain/chartScale';
 import { useTheme } from '@/theme/ThemeProvider';
+import { fonts } from '@/theme/tokens';
 
 const AXIS = 28;
 const X_LABELS = 16;
@@ -90,7 +91,13 @@ export function LineChart({
           ) : null;
         })}
         {xTicks.map((t) => (
-          <SvgText key={`x${t.i}`} x={Math.min(xAt(t.i), plotW - 18)} y={height + X_LABELS - 3} fill={colors.text2} fontSize={10}>
+          <SvgText
+            key={`x${t.i}`}
+            x={Math.min(xAt(t.i), plotW - 18)}
+            y={height + X_LABELS - 3}
+            fill={colors.text2}
+            fontSize={10}
+            fontFamily={fonts.regular}>
             {t.label}
           </SvgText>
         ))}

@@ -73,3 +73,15 @@ export function dayLabel(iso: string, now: Date = new Date()): string {
   if (day === localDayKey(yesterday)) return 'Yesterday';
   return new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 }
+
+/** "effort 7 → 9" (first to last rated set) or "effort 8" when steady; a nudge when every rated set was 6 or under. */
+export function effortLine(sets: SetLike[]): { text: string; hint: string | null } | null {
+  const rated = sets.flatMap((s) => (s.effort == null ? [] : [s.effort]));
+  if (!rated.length) return null;
+  const first = rated[0];
+  const last = rated.at(-1)!;
+  return {
+    text: first === last ? `effort ${first}` : `effort ${first} → ${last}`,
+    hint: rated.every((e) => e <= 6) ? 'Felt easy: try a bit more next time' : null,
+  };
+}

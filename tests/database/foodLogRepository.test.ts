@@ -18,7 +18,13 @@ test('logging a meal snapshots its nutrition, day and meal time', async () => {
   const db = await migratedDb();
   const { beefDinner } = await seedRegulars(db);
   const entry = await logLoggable(db, { kind: 'recipe', id: beefDinner.id }, 1, at('2026-10-21T18:30:00Z'));
-  expect(entry).toMatchObject({ name: 'Beef & sweet potato', unit: 'portion', amount: 1, mealCategory: 'dinner', localDay: '2026-10-21' });
+  expect(entry).toMatchObject({
+    name: 'Beef & sweet potato',
+    unit: 'portion',
+    amount: 1,
+    mealCategory: 'dinner',
+    localDay: '2026-10-21',
+  });
   expect(entry.nutrients.kcal).toBeCloseTo(450.5, 10);
 });
 
@@ -118,7 +124,8 @@ describe('quickPicks', () => {
   test('favourites first, then what you log most in the last 14 days', async () => {
     const db = await migratedDb();
     const { overnightOats, beefDinner, foods } = await seedRegulars(db);
-    for (let i = 0; i < 3; i++) await logLoggable(db, { kind: 'recipe', id: beefDinner.id }, 1, at(`2026-10-1${5 + i}T18:00:00Z`));
+    for (let i = 0; i < 3; i++)
+      await logLoggable(db, { kind: 'recipe', id: beefDinner.id }, 1, at(`2026-10-1${5 + i}T18:00:00Z`));
     await logLoggable(db, { kind: 'recipe', id: overnightOats.id }, 1, at('2026-10-20T07:00:00Z'));
     await setFoodFavourite(db, foods.whey.id, true);
 

@@ -22,9 +22,17 @@ export function Sheet({ visible, title, onClose, closeLabel = 'Cancel', children
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      navigationBarTranslucent>
       {/* The modal draws edge to edge, so Android won't resize it for the keyboard: lift the sheet ourselves. */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, justifyContent: 'flex-end' }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1, justifyContent: 'flex-end' }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Close"

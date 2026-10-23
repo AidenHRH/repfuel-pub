@@ -1,3 +1,4 @@
+import { effortLine } from '@/domain/lifts';
 import { bestSet, dayLabel, formatDuration, liftSummary, setsLabel } from '@/domain/lifts';
 
 const s = (weightKg: number | null, reps: number, effort: number | null = null) => ({ weightKg, reps, effort });
@@ -30,4 +31,18 @@ test('timed and reps-only sets read naturally', () => {
   expect(formatDuration(90)).toBe('1:30');
   expect(formatDuration(5)).toBe('0:05');
   expect(formatDuration(3600)).toBe('60:00');
+});
+
+describe('effortLine', () => {
+  const s = (effort: number | null) => ({ weightKg: 80, reps: 8, effort });
+  test('first to last set, or one number when steady', () => {
+    expect(effortLine([s(7), s(8), s(9)])).toEqual({ text: 'effort 7 → 9', hint: null });
+    expect(effortLine([s(8), s(8)])).toEqual({ text: 'effort 8', hint: null });
+  });
+  test('every rated set at 6 or under suggests going heavier', () => {
+    expect(effortLine([s(5), s(6), s(null)])).toEqual({ text: 'effort 5 → 6', hint: 'Felt easy: try a bit more next time' });
+  });
+  test('nothing rated: no line', () => {
+    expect(effortLine([s(null)])).toBeNull();
+  });
 });

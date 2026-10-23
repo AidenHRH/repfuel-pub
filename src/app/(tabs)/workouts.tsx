@@ -14,20 +14,21 @@ import { deleteClass } from '@/database/repositories/classRepository';
 import { deleteLift } from '@/database/repositories/liftRepository';
 import { trainingFeed } from '@/database/repositories/trainingRepository';
 import type { RecordEvent } from '@/domain/records';
-import { groupFeedByDay, weekSummary, type FeedItem } from '@/domain/training';
+import { dayEffort, groupFeedByDay, weekSummary, type FeedItem } from '@/domain/training';
+import { effortColor } from '@/features/progress/parts';
 import { safely } from '@/features/safely';
 import { workoutEvents } from '@/features/workouts/events';
 import { FeedCard } from '@/features/workouts/FeedCard';
 import { WeekCard } from '@/features/workouts/WeekCard';
 import { useTheme } from '@/theme/ThemeProvider';
-import { radii, spacing } from '@/theme/tokens';
+import { fonts, radii, spacing } from '@/theme/tokens';
 
 type Celebration = { key: number; name: string; records: RecordEvent[] };
 
 export default function WorkoutsScreen() {
   const db = useDb();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, name: theme } = useTheme();
   const [items, setItems] = useState<FeedItem[] | null>(null);
   const [version, setVersion] = useState(0);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
@@ -131,9 +132,26 @@ export default function WorkoutsScreen() {
 
         {days.map((day) => (
           <View key={day.day} style={{ gap: spacing.sm }}>
-            <Text variant="overline" color="text2" accessibilityRole="header" style={{ paddingHorizontal: spacing.xs }}>
-              {day.label}
-            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                paddingHorizontal: spacing.xs,
+              }}>
+              <Text variant="overline" color="text2" accessibilityRole="header">
+                {day.label}
+              </Text>
+              {dayEffort(day.items) !== null ? (
+                <Text
+                  variant="caption"
+                  numeric
+                  accessibilityLabel={`Average effort ${dayEffort(day.items)} out of 10`}
+                  style={{ color: effortColor(theme, dayEffort(day.items)!), fontFamily: fonts.semibold }}>
+                  {`effort ${dayEffort(day.items)}`}
+                </Text>
+              ) : null}
+            </View>
             <View style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
               {day.items.map((item, i) => (
                 <FeedCard
