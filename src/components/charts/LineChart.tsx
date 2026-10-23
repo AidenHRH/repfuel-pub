@@ -62,6 +62,7 @@ export function LineChart({
             y={pad + (k / 2) * (height - pad * 2) + 4}
             fill={colors.text2}
             fontSize={10}
+            fontFamily={fonts.regular}
             textAnchor="end">
             {yFormat(g)}
           </SvgText>
