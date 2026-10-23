@@ -1,0 +1,21 @@
+{
+  "code": "5056000000017",
+  "status": 1,
+  "status_verbose": "product found",
+  "product": {
+    "product_name": "Whey Protein Chocolate",
+    "brands": "Test Nutrition, Test Brand Ltd",
+    "quantity": "1 kg",
+    "product_quantity_unit": "g",
+    "serving_quantity": 25,
+    "serving_size": "25 g",
+    "nutriments": {
+      "energy-kcal_100g": 400,
+      "energy-kj_100g": 1674,
+      "proteins_100g": 76,
+      "carbohydrates_100g": 9.2,
+      "fat_100g": 6.1,
+      "fiber_100g": 1.4
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "code": "5000000000003",
+  "status": 1,
+  "product": {
+    "product_name_en": "Semi Skimmed Milk",
+    "brands": "Dairy Co",
+    "quantity": "2 L",
+    "nutriments": { "energy-kcal_100g": 47, "proteins_100g": 3.6, "carbohydrates_100g": 4.8, "fat_100g": 1.7 }
+  }
+}

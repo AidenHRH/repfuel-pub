@@ -1,0 +1,1144 @@
+import type { Nutrients } from './types';
+
+/** A household measure, e.g. "1 cup" = 148 g of blueberries. */
+export type Measure = { label: string; grams: number };
+
+/**
+ * An everyday food with typical values per 100 g (or 100 ml for drinks) and the measures people use for it,
+ * so a cup of blueberries or a large egg logs without weighing or scanning. Values are typical, not a brand's.
+ */
+export type CommonFood = {
+  id: string;
+  name: string;
+  group:
+    | 'Fruit'
+    | 'Vegetables'
+    | 'Bread, grains & cereal'
+    | 'Meat, fish & eggs'
+    | 'Dairy'
+    | 'Drinks'
+    | 'Snacks'
+    | 'Nuts, seeds & spreads'
+    | 'Beans & pulses'
+    | 'Cupboard';
+  basis: 'per_100g' | 'per_100ml';
+  per100: Nutrients;
+  measures: Measure[];
+  /** Search words besides the name, e.g. "berries". */
+  aliases?: string[];
+};
+
+/**
+ * Typical values are written with total carbohydrate (the US convention, which includes fibre). UK labels list
+ * fibre separately, so carbs here exclude it, matching the packs RepFuel scans.
+ */
+const n = (kcal: number, proteinG: number, totalCarbsG: number, fatG: number, fibreG: number | null): Nutrients => ({
+  kcal,
+  proteinG,
+  carbsG: Math.max(0, Math.round((totalCarbsG - (fibreG ?? 0)) * 10) / 10),
+  fatG,
+  fibreG,
+});
+
+export const COMMON_FOODS: CommonFood[] = [
+  // Fruit
+  {
+    id: 'banana',
+    name: 'Banana',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(89, 1.1, 22.8, 0.3, 2.6),
+    measures: [
+      { label: '1 medium', grams: 118 },
+      { label: '1 small', grams: 101 },
+    ],
+  },
+  {
+    id: 'apple',
+    name: 'Apple',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(52, 0.3, 13.8, 0.2, 2.4),
+    measures: [
+      { label: '1 medium', grams: 182 },
+      { label: '1 small', grams: 149 },
+    ],
+  },
+  {
+    id: 'blueberries',
+    name: 'Blueberries',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(57, 0.7, 14.5, 0.3, 2.4),
+    measures: [
+      { label: '1 cup', grams: 148 },
+      { label: '1 handful', grams: 40 },
+    ],
+    aliases: ['berries'],
+  },
+  {
+    id: 'strawberries',
+    name: 'Strawberries',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(32, 0.7, 7.7, 0.3, 2.0),
+    measures: [
+      { label: '1 cup, sliced', grams: 166 },
+      { label: '1 strawberry', grams: 12 },
+    ],
+    aliases: ['berries'],
+  },
+  {
+    id: 'raspberries',
+    name: 'Raspberries',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(52, 1.2, 11.9, 0.7, 6.5),
+    measures: [
+      { label: '1 cup', grams: 123 },
+      { label: '1 handful', grams: 40 },
+    ],
+    aliases: ['berries'],
+  },
+  {
+    id: 'grapes',
+    name: 'Grapes',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(69, 0.7, 18.1, 0.2, 0.9),
+    measures: [
+      { label: '1 cup', grams: 151 },
+      { label: '1 handful', grams: 50 },
+    ],
+  },
+  {
+    id: 'orange',
+    name: 'Orange',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(47, 0.9, 11.8, 0.1, 2.4),
+    measures: [{ label: '1 medium', grams: 131 }],
+  },
+  {
+    id: 'clementine',
+    name: 'Clementine',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(47, 0.9, 12.0, 0.2, 1.7),
+    measures: [{ label: '1 clementine', grams: 74 }],
+    aliases: ['satsuma', 'easy peeler'],
+  },
+  {
+    id: 'pear',
+    name: 'Pear',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(57, 0.4, 15.2, 0.1, 3.1),
+    measures: [{ label: '1 medium', grams: 178 }],
+  },
+  {
+    id: 'kiwi',
+    name: 'Kiwi',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(61, 1.1, 14.7, 0.5, 3.0),
+    measures: [{ label: '1 kiwi', grams: 69 }],
+  },
+  {
+    id: 'mango',
+    name: 'Mango',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(60, 0.8, 15.0, 0.4, 1.6),
+    measures: [{ label: '1 cup, chunks', grams: 165 }],
+  },
+  {
+    id: 'pineapple',
+    name: 'Pineapple',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(50, 0.5, 13.1, 0.1, 1.4),
+    measures: [{ label: '1 cup, chunks', grams: 165 }],
+  },
+  {
+    id: 'avocado',
+    name: 'Avocado',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(160, 2.0, 8.5, 14.7, 6.7),
+    measures: [
+      { label: '½ avocado', grams: 68 },
+      { label: '1 avocado', grams: 136 },
+    ],
+  },
+  {
+    id: 'raisins',
+    name: 'Raisins',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(299, 3.1, 79.2, 0.5, 3.7),
+    measures: [
+      { label: '1 handful', grams: 30 },
+      { label: '1 tbsp', grams: 9 },
+    ],
+    aliases: ['sultanas', 'dried fruit'],
+  },
+  {
+    id: 'medjool-date',
+    name: 'Medjool dates',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(277, 1.8, 75.0, 0.2, 6.7),
+    measures: [{ label: '1 date', grams: 24 }],
+  },
+
+  // Vegetables
+  {
+    id: 'broccoli',
+    name: 'Broccoli',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(34, 2.8, 6.6, 0.4, 2.6),
+    measures: [
+      { label: '1 cup, chopped', grams: 91 },
+      { label: '1 portion', grams: 80 },
+    ],
+  },
+  {
+    id: 'spinach',
+    name: 'Spinach',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(23, 2.9, 3.6, 0.4, 2.2),
+    measures: [{ label: '1 handful', grams: 30 }],
+  },
+  {
+    id: 'carrot',
+    name: 'Carrot',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(41, 0.9, 9.6, 0.2, 2.8),
+    measures: [{ label: '1 medium', grams: 61 }],
+  },
+  {
+    id: 'tomato',
+    name: 'Tomato',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(18, 0.9, 3.9, 0.2, 1.2),
+    measures: [
+      { label: '1 medium', grams: 123 },
+      { label: '1 cherry tomato', grams: 17 },
+    ],
+  },
+  {
+    id: 'cucumber',
+    name: 'Cucumber',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(15, 0.7, 3.6, 0.1, 0.5),
+    measures: [{ label: '1 cup, sliced', grams: 104 }],
+  },
+  {
+    id: 'red-pepper',
+    name: 'Red pepper',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(31, 1.0, 6.0, 0.3, 2.1),
+    measures: [{ label: '1 medium', grams: 119 }],
+    aliases: ['bell pepper'],
+  },
+  {
+    id: 'onion',
+    name: 'Onion',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(40, 1.1, 9.3, 0.1, 1.7),
+    measures: [{ label: '1 medium', grams: 110 }],
+  },
+  {
+    id: 'mushrooms',
+    name: 'Mushrooms',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(22, 3.1, 3.3, 0.3, 1.0),
+    measures: [{ label: '1 cup, sliced', grams: 70 }],
+  },
+  {
+    id: 'peas',
+    name: 'Peas, cooked',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(78, 5.2, 14.3, 0.2, 5.5),
+    measures: [
+      { label: '1 portion', grams: 80 },
+      { label: '1 cup', grams: 160 },
+    ],
+  },
+  {
+    id: 'sweetcorn',
+    name: 'Sweetcorn, cooked',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(96, 3.4, 21.0, 1.5, 2.4),
+    measures: [
+      { label: '1 portion', grams: 80 },
+      { label: '1 cup', grams: 164 },
+    ],
+    aliases: ['corn'],
+  },
+  {
+    id: 'sweet-potato',
+    name: 'Sweet potato, baked',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(90, 2.0, 20.7, 0.2, 3.3),
+    measures: [{ label: '1 medium', grams: 114 }],
+  },
+  {
+    id: 'potato',
+    name: 'Potato, baked',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(93, 2.5, 21.2, 0.1, 2.2),
+    measures: [{ label: '1 medium', grams: 173 }],
+    aliases: ['jacket potato'],
+  },
+
+  // Bread, grains & cereal
+  {
+    id: 'oats',
+    name: 'Porridge oats, dry',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(379, 13.2, 67.7, 6.5, 10.1),
+    measures: [{ label: '½ cup', grams: 40 }],
+    aliases: ['rolled oats', 'porridge'],
+  },
+  {
+    id: 'white-rice',
+    name: 'White rice, cooked',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(130, 2.7, 28.2, 0.3, 0.4),
+    measures: [{ label: '1 cup', grams: 158 }],
+  },
+  {
+    id: 'brown-rice',
+    name: 'Brown rice, cooked',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(123, 2.7, 25.6, 1.0, 1.6),
+    measures: [{ label: '1 cup', grams: 202 }],
+  },
+  {
+    id: 'pasta',
+    name: 'Pasta, cooked',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(158, 5.8, 30.9, 0.9, 1.8),
+    measures: [{ label: '1 cup', grams: 140 }],
+  },
+  {
+    id: 'wholemeal-bread',
+    name: 'Wholemeal bread',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(252, 12.4, 42.7, 3.5, 6.0),
+    measures: [{ label: '1 medium slice', grams: 36 }],
+    aliases: ['brown bread', 'toast'],
+  },
+  {
+    id: 'white-bread',
+    name: 'White bread',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(266, 7.6, 50.6, 3.3, 2.4),
+    measures: [{ label: '1 medium slice', grams: 36 }],
+    aliases: ['toast'],
+  },
+  {
+    id: 'bagel',
+    name: 'Bagel, plain',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(257, 10.0, 50.5, 1.6, 2.2),
+    measures: [{ label: '1 bagel', grams: 90 }],
+  },
+  {
+    id: 'tortilla-wrap',
+    name: 'Tortilla wrap',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(312, 8.3, 51.6, 8.0, 3.5),
+    measures: [{ label: '1 wrap', grams: 62 }],
+  },
+  {
+    id: 'cornflakes',
+    name: 'Cornflakes',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(357, 7.5, 84.0, 0.4, 3.3),
+    measures: [{ label: '1 bowl', grams: 30 }],
+    aliases: ['cereal'],
+  },
+  {
+    id: 'granola',
+    name: 'Granola',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(471, 10.0, 64.0, 20.0, 6.0),
+    measures: [{ label: '1 bowl', grams: 45 }],
+    aliases: ['cereal'],
+  },
+
+  // Meat, fish & eggs
+  {
+    id: 'chicken-breast',
+    name: 'Chicken breast, cooked',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(165, 31.0, 0, 3.6, 0),
+    measures: [{ label: '1 breast', grams: 120 }],
+  },
+  {
+    id: 'chicken-thigh',
+    name: 'Chicken thigh, cooked, skinless',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(179, 24.8, 0, 8.2, 0),
+    measures: [{ label: '1 thigh', grams: 52 }],
+  },
+  {
+    id: 'salmon',
+    name: 'Salmon fillet, cooked',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(206, 22.1, 0, 12.4, 0),
+    measures: [{ label: '1 fillet', grams: 120 }],
+  },
+  {
+    id: 'tuna-can',
+    name: 'Tuna in water, drained',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(116, 25.5, 0, 0.8, 0),
+    measures: [{ label: '1 can, drained', grams: 110 }],
+  },
+  {
+    id: 'prawns',
+    name: 'Prawns, cooked',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(99, 24.0, 0.2, 0.3, 0),
+    measures: [{ label: '1 handful', grams: 60 }],
+    aliases: ['shrimp'],
+  },
+  {
+    id: 'egg',
+    name: 'Egg',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(143, 12.6, 0.7, 9.5, 0),
+    measures: [
+      { label: '1 large', grams: 50 },
+      { label: '1 medium', grams: 44 },
+    ],
+    aliases: ['eggs', 'boiled egg', 'scrambled'],
+  },
+  {
+    id: 'egg-white',
+    name: 'Egg white',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(52, 10.9, 0.7, 0.2, 0),
+    measures: [{ label: '1 egg white', grams: 33 }],
+  },
+
+  // Dairy
+  {
+    id: 'greek-yoghurt-0',
+    name: 'Greek yoghurt, 0% fat',
+    group: 'Dairy',
+    basis: 'per_100g',
+    per100: n(59, 10.2, 3.6, 0.4, 0),
+    measures: [
+      { label: '1 bowl', grams: 150 },
+      { label: '1 tbsp', grams: 15 },
+    ],
+    aliases: ['yogurt'],
+  },
+  {
+    id: 'cottage-cheese',
+    name: 'Cottage cheese, low fat',
+    group: 'Dairy',
+    basis: 'per_100g',
+    per100: n(81, 10.5, 4.8, 2.3, 0),
+    measures: [{ label: '½ cup', grams: 113 }],
+  },
+  {
+    id: 'cheddar',
+    name: 'Cheddar',
+    group: 'Dairy',
+    basis: 'per_100g',
+    per100: n(403, 24.9, 1.3, 33.1, 0),
+    measures: [
+      { label: '1 matchbox piece', grams: 30 },
+      { label: '1 slice', grams: 20 },
+    ],
+    aliases: ['cheese'],
+  },
+
+  // Drinks (per 100 ml)
+  {
+    id: 'semi-skimmed-milk',
+    name: 'Semi-skimmed milk',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(47, 3.4, 4.7, 1.7, 0),
+    measures: [
+      { label: '1 glass', grams: 200 },
+      { label: 'Splash in tea', grams: 30 },
+    ],
+    aliases: ['milk'],
+  },
+  {
+    id: 'whole-milk',
+    name: 'Whole milk',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(64, 3.3, 4.7, 3.6, 0),
+    measures: [{ label: '1 glass', grams: 200 }],
+    aliases: ['milk'],
+  },
+  {
+    id: 'skimmed-milk',
+    name: 'Skimmed milk',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(35, 3.4, 5.0, 0.2, 0),
+    measures: [{ label: '1 glass', grams: 200 }],
+    aliases: ['milk'],
+  },
+  {
+    id: 'orange-juice',
+    name: 'Orange juice',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(45, 0.7, 10.4, 0.2, 0.2),
+    measures: [{ label: '1 glass', grams: 200 }],
+  },
+  {
+    id: 'cola',
+    name: 'Cola',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(42, 0, 10.6, 0, 0),
+    measures: [{ label: '1 can', grams: 330 }],
+    aliases: ['coke', 'fizzy'],
+  },
+  {
+    id: 'lager',
+    name: 'Lager',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(43, 0.5, 3.6, 0, 0),
+    measures: [
+      { label: '1 pint', grams: 568 },
+      { label: '1 bottle', grams: 330 },
+    ],
+    aliases: ['beer', 'pint'],
+  },
+  {
+    id: 'red-wine',
+    name: 'Red wine',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(85, 0.1, 2.6, 0, 0),
+    measures: [{ label: '1 glass', grams: 175 }],
+    aliases: ['wine'],
+  },
+
+  // Coffee shop drinks (per 100 ml; made with semi-skimmed milk). Sizes are typical high-street cups.
+  {
+    id: 'latte',
+    name: 'Latte',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(41, 3.0, 4.1, 1.5, 0),
+    measures: [
+      { label: 'Medium', grams: 350 },
+      { label: 'Small', grams: 250 },
+      { label: 'Large', grams: 450 },
+    ],
+    aliases: ['coffee'],
+  },
+  {
+    id: 'cappuccino',
+    name: 'Cappuccino',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(29, 2.1, 2.9, 1.1, 0),
+    measures: [
+      { label: 'Medium', grams: 350 },
+      { label: 'Small', grams: 250 },
+      { label: 'Large', grams: 450 },
+    ],
+    aliases: ['coffee'],
+  },
+  {
+    id: 'flat-white',
+    name: 'Flat white',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(35, 2.5, 3.5, 1.3, 0),
+    measures: [{ label: '1 cup', grams: 220 }],
+    aliases: ['coffee'],
+  },
+  {
+    id: 'americano',
+    name: 'Americano, black',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(1, 0.1, 0, 0, 0),
+    measures: [{ label: 'Medium', grams: 350 }],
+    aliases: ['coffee', 'black coffee'],
+  },
+  {
+    id: 'tea-with-milk',
+    name: 'Tea with milk',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(6, 0.4, 0.6, 0.2, 0),
+    measures: [{ label: '1 mug', grams: 250 }],
+    aliases: ['cup of tea', 'brew'],
+  },
+  {
+    id: 'hot-chocolate',
+    name: 'Hot chocolate',
+    group: 'Drinks',
+    basis: 'per_100ml',
+    per100: n(68, 3.0, 10.0, 1.8, 0),
+    measures: [{ label: 'Medium', grams: 350 }],
+    aliases: ['cocoa'],
+  },
+
+  // Snacks
+  {
+    id: 'crisps',
+    name: 'Crisps, ready salted',
+    group: 'Snacks',
+    basis: 'per_100g',
+    per100: n(536, 6.6, 53.0, 34.6, 4.4),
+    measures: [{ label: '1 bag', grams: 25 }],
+    aliases: ['chips'],
+  },
+  {
+    id: 'milk-chocolate',
+    name: 'Milk chocolate',
+    group: 'Snacks',
+    basis: 'per_100g',
+    per100: n(535, 7.6, 59.4, 29.7, 3.4),
+    measures: [
+      { label: '1 bar', grams: 45 },
+      { label: '1 square', grams: 6 },
+    ],
+    aliases: ['chocolate bar', 'chocolate'],
+  },
+  {
+    id: 'croissant',
+    name: 'Croissant',
+    group: 'Snacks',
+    basis: 'per_100g',
+    per100: n(406, 8.2, 45.8, 21.0, 2.6),
+    measures: [{ label: '1 croissant', grams: 57 }],
+    aliases: ['pastry'],
+  },
+  {
+    id: 'digestive',
+    name: 'Digestive biscuit',
+    group: 'Snacks',
+    basis: 'per_100g',
+    per100: n(480, 7.0, 63.0, 21.0, 3.5),
+    measures: [{ label: '1 biscuit', grams: 15 }],
+    aliases: ['biscuits'],
+  },
+  {
+    id: 'rice-cake',
+    name: 'Rice cakes',
+    group: 'Snacks',
+    basis: 'per_100g',
+    per100: n(387, 8.2, 81.5, 2.8, 4.2),
+    measures: [{ label: '1 rice cake', grams: 9 }],
+  },
+
+  // Nuts, seeds & spreads
+  {
+    id: 'peanut-butter',
+    name: 'Peanut butter',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(588, 25.0, 20.0, 50.0, 6.0),
+    measures: [{ label: '1 tbsp', grams: 16 }],
+  },
+  {
+    id: 'almonds',
+    name: 'Almonds',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(579, 21.2, 21.6, 49.9, 12.5),
+    measures: [{ label: '1 handful', grams: 30 }],
+    aliases: ['nuts'],
+  },
+  {
+    id: 'walnuts',
+    name: 'Walnuts',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(654, 15.2, 13.7, 65.2, 6.7),
+    measures: [{ label: '1 handful', grams: 30 }],
+    aliases: ['nuts'],
+  },
+  {
+    id: 'chia-seeds',
+    name: 'Chia seeds',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(486, 16.5, 42.1, 30.7, 34.4),
+    measures: [{ label: '1 tbsp', grams: 12 }],
+  },
+  {
+    id: 'olive-oil',
+    name: 'Olive oil',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(884, 0, 0, 100, 0),
+    measures: [
+      { label: '1 tbsp', grams: 14 },
+      { label: '1 tsp', grams: 4.5 },
+    ],
+  },
+  {
+    id: 'butter',
+    name: 'Butter',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(717, 0.9, 0.1, 81.1, 0),
+    measures: [
+      { label: 'On a slice of toast', grams: 7 },
+      { label: '1 tsp', grams: 5 },
+    ],
+  },
+  {
+    id: 'honey',
+    name: 'Honey',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(304, 0.3, 82.4, 0, 0.2),
+    measures: [
+      { label: '1 tsp', grams: 7 },
+      { label: '1 tbsp', grams: 21 },
+    ],
+  },
+  {
+    id: 'hummus',
+    name: 'Hummus',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(166, 7.9, 14.3, 9.6, 6.0),
+    measures: [{ label: '2 tbsp', grams: 30 }],
+  },
+  {
+    id: 'dark-chocolate',
+    name: 'Dark chocolate, 70–85%',
+    group: 'Nuts, seeds & spreads',
+    basis: 'per_100g',
+    per100: n(598, 7.8, 45.9, 42.6, 10.9),
+    measures: [
+      { label: '1 square', grams: 10 },
+      { label: '1 row', grams: 25 },
+    ],
+    aliases: ['chocolate'],
+  },
+
+  // Beans & pulses
+  {
+    id: 'baked-beans',
+    name: 'Baked beans',
+    group: 'Beans & pulses',
+    basis: 'per_100g',
+    per100: n(78, 4.7, 16.6, 0.2, 3.7),
+    measures: [{ label: '½ can', grams: 207 }],
+  },
+  {
+    id: 'chickpeas',
+    name: 'Chickpeas, cooked',
+    group: 'Beans & pulses',
+    basis: 'per_100g',
+    per100: n(164, 8.9, 27.4, 2.6, 7.6),
+    measures: [{ label: '½ can, drained', grams: 120 }],
+  },
+  {
+    id: 'lentils',
+    name: 'Lentils, cooked',
+    group: 'Beans & pulses',
+    basis: 'per_100g',
+    per100: n(116, 9.0, 20.1, 0.4, 7.9),
+    measures: [{ label: '1 cup', grams: 198 }],
+  },
+  {
+    id: 'kidney-beans',
+    name: 'Kidney beans, cooked',
+    group: 'Beans & pulses',
+    basis: 'per_100g',
+    per100: n(127, 8.7, 22.8, 0.5, 6.4),
+    measures: [{ label: '½ can, drained', grams: 120 }],
+  },
+  // Cooking: raw weights, tins, spices and sauces for the recipe book
+  {
+    id: 'chicken-breast-raw',
+    name: 'Chicken breast, raw',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(106, 24.0, 0, 1.1, 0),
+    measures: [{ label: '1 breast', grams: 150 }],
+    aliases: ['chicken fillet'],
+  },
+  {
+    id: 'turkey-mince',
+    name: 'Turkey mince 5% fat, raw',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(126, 21.5, 0, 4.5, 0),
+    measures: [{ label: '1 pack', grams: 500 }],
+    aliases: ['minced turkey'],
+  },
+  {
+    id: 'beef-mince-5',
+    name: 'Beef mince 5% fat, raw',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(124, 21.0, 0, 4.5, 0),
+    measures: [{ label: '1 pack', grams: 500 }],
+    aliases: ['minced beef', 'lean mince'],
+  },
+  {
+    id: 'salmon-raw',
+    name: 'Salmon fillet, raw',
+    group: 'Meat, fish & eggs',
+    basis: 'per_100g',
+    per100: n(208, 20.4, 0, 13.4, 0),
+    measures: [{ label: '1 fillet', grams: 120 }],
+  },
+  {
+    id: 'white-rice-dry',
+    name: 'White rice (basmati), dry',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(355, 7.8, 78.7, 0.9, 1.3),
+    measures: [{ label: '1 portion', grams: 75 }],
+    aliases: ['uncooked rice'],
+  },
+  {
+    id: 'pasta-dry',
+    name: 'Pasta, dry',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(357, 12.5, 73.0, 1.6, 3.0),
+    measures: [{ label: '1 portion', grams: 75 }],
+    aliases: ['spaghetti', 'penne', 'fusilli'],
+  },
+  {
+    id: 'couscous-dry',
+    name: 'Couscous, dry',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(376, 12.8, 77.4, 0.6, 5.0),
+    measures: [{ label: '1 portion', grams: 60 }],
+  },
+  {
+    id: 'egg-noodles-dry',
+    name: 'Noodles (egg), dry',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(384, 14.2, 71.3, 4.4, 2.5),
+    measures: [{ label: '1 nest', grams: 63 }],
+    aliases: ['noodles'],
+  },
+  {
+    id: 'panko',
+    name: 'Panko breadcrumbs',
+    group: 'Bread, grains & cereal',
+    basis: 'per_100g',
+    per100: n(395, 12.5, 77.0, 4.0, 3.6),
+    measures: [{ label: '1 tbsp', grams: 8 }],
+    aliases: ['breadcrumbs'],
+  },
+  {
+    id: 'chopped-tomatoes',
+    name: 'Chopped tomatoes, tinned',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(21, 1.1, 3.8, 0.1, 0.9),
+    measures: [{ label: '1 tin', grams: 400 }],
+    aliases: ['tinned tomatoes'],
+  },
+  {
+    id: 'passata',
+    name: 'Passata',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(30, 1.4, 5.5, 0.2, 1.4),
+    measures: [{ label: '1 carton', grams: 500 }],
+  },
+  {
+    id: 'tomato-puree',
+    name: 'Tomato purée',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(82, 4.3, 18.9, 0.5, 4.1),
+    measures: [{ label: '1 tbsp', grams: 16 }],
+    aliases: ['tomato paste'],
+  },
+  {
+    id: 'black-beans',
+    name: 'Black beans, tinned, drained',
+    group: 'Beans & pulses',
+    basis: 'per_100g',
+    per100: n(132, 8.9, 23.7, 0.5, 8.7),
+    measures: [{ label: '1 tin, drained', grams: 240 }],
+  },
+  {
+    id: 'garlic',
+    name: 'Garlic',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(149, 6.4, 33.1, 0.5, 2.1),
+    measures: [{ label: '1 clove', grams: 3 }],
+  },
+  {
+    id: 'ginger',
+    name: 'Ginger, fresh',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(80, 1.8, 17.8, 0.8, 2.0),
+    measures: [{ label: '1 thumb-sized piece', grams: 10 }],
+  },
+  {
+    id: 'spring-onion',
+    name: 'Spring onion',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(32, 1.8, 7.3, 0.2, 2.6),
+    measures: [{ label: '1 spring onion', grams: 15 }],
+    aliases: ['scallion'],
+  },
+  {
+    id: 'courgette',
+    name: 'Courgette',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(17, 1.2, 3.1, 0.3, 1.0),
+    measures: [{ label: '1 medium', grams: 200 }],
+    aliases: ['zucchini'],
+  },
+  {
+    id: 'green-beans',
+    name: 'Green beans',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(31, 1.8, 7.0, 0.2, 2.7),
+    measures: [{ label: '1 portion', grams: 80 }],
+  },
+  {
+    id: 'mixed-veg-frozen',
+    name: 'Mixed vegetables, frozen',
+    group: 'Vegetables',
+    basis: 'per_100g',
+    per100: n(64, 3.3, 13.0, 0.5, 4.0),
+    measures: [{ label: '1 portion', grams: 80 }],
+    aliases: ['frozen veg'],
+  },
+  {
+    id: 'lime',
+    name: 'Lime',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(30, 0.7, 10.5, 0.2, 2.8),
+    measures: [{ label: '1 lime', grams: 67 }],
+  },
+  {
+    id: 'lemon',
+    name: 'Lemon',
+    group: 'Fruit',
+    basis: 'per_100g',
+    per100: n(29, 1.1, 9.3, 0.3, 2.8),
+    measures: [{ label: '1 lemon', grams: 84 }],
+  },
+  {
+    id: 'paprika',
+    name: 'Smoked paprika',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(282, 14.1, 54.0, 12.9, 34.9),
+    measures: [{ label: '1 tsp', grams: 2.3 }],
+    aliases: ['paprika'],
+  },
+  {
+    id: 'chilli-powder',
+    name: 'Chilli powder',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(282, 13.5, 49.7, 14.3, 34.8),
+    measures: [{ label: '1 tsp', grams: 2.7 }],
+  },
+  {
+    id: 'cumin',
+    name: 'Ground cumin',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(375, 17.8, 44.2, 22.3, 10.5),
+    measures: [{ label: '1 tsp', grams: 2.1 }],
+  },
+  {
+    id: 'curry-powder',
+    name: 'Curry powder',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(325, 14.3, 55.8, 14.0, 53.2),
+    measures: [{ label: '1 tsp', grams: 2.0 }],
+  },
+  {
+    id: 'mixed-herbs',
+    name: 'Dried mixed herbs',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(265, 9.0, 69.0, 4.3, 42.5),
+    measures: [{ label: '1 tsp', grams: 1.0 }],
+    aliases: ['oregano', 'italian herbs'],
+  },
+  {
+    id: 'cinnamon',
+    name: 'Ground cinnamon',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(247, 4.0, 80.6, 1.2, 53.1),
+    measures: [{ label: '1 tsp', grams: 2.6 }],
+  },
+  {
+    id: 'soy-sauce',
+    name: 'Soy sauce',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(53, 8.1, 4.9, 0.6, 0.8),
+    measures: [{ label: '1 tbsp', grams: 16 }],
+  },
+  {
+    id: 'sweet-chilli-sauce',
+    name: 'Sweet chilli sauce',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(225, 0.4, 54.0, 0.3, 0.6),
+    measures: [{ label: '1 tbsp', grams: 17 }],
+  },
+  {
+    id: 'chicken-stock',
+    name: 'Chicken stock, made up',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(7, 1.0, 0.5, 0.2, 0),
+    measures: [{ label: '1 cup', grams: 240 }],
+    aliases: ['stock'],
+  },
+  {
+    id: 'coconut-milk-light',
+    name: 'Light coconut milk',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(73, 0.7, 2.6, 6.8, 0),
+    measures: [{ label: '1 tin', grams: 400 }],
+  },
+  {
+    id: 'pesto',
+    name: 'Green pesto',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(450, 5.0, 6.0, 45.0, 1.5),
+    measures: [{ label: '1 tbsp', grams: 15 }],
+  },
+  {
+    id: 'salsa',
+    name: 'Tomato salsa',
+    group: 'Cupboard',
+    basis: 'per_100g',
+    per100: n(36, 1.5, 7.0, 0.2, 1.9),
+    measures: [{ label: '1 tbsp', grams: 16 }],
+  },
+  {
+    id: 'mozzarella-light',
+    name: 'Light mozzarella',
+    group: 'Dairy',
+    basis: 'per_100g',
+    per100: n(165, 19.6, 1.0, 9.5, 0),
+    measures: [{ label: '1 ball', grams: 125 }],
+  },
+  {
+    id: 'feta',
+    name: 'Feta',
+    group: 'Dairy',
+    basis: 'per_100g',
+    per100: n(264, 14.2, 4.1, 21.3, 0),
+    measures: [{ label: '1 block', grams: 200 }],
+  },
+  {
+    id: 'parmesan',
+    name: 'Parmesan',
+    group: 'Dairy',
+    basis: 'per_100g',
+    per100: n(431, 38.5, 4.1, 28.6, 0),
+    measures: [{ label: '1 tbsp, grated', grams: 5 }],
+    aliases: ['parmigiano'],
+  },
+  {
+    id: 'whey-protein',
+    name: 'Whey protein powder',
+    group: 'Dairy',
+    basis: 'per_100g',
+    per100: n(400, 78.0, 8.0, 6.0, 0),
+    measures: [{ label: '1 scoop', grams: 30 }],
+    aliases: ['protein powder'],
+  },
+];
+
+const byId = new Map(COMMON_FOODS.map((f) => [f.id, f]));
+
+export function getCommonFood(id: string): CommonFood | null {
+  return byId.get(id) ?? null;
+}
+
+/** Common foods matching a search, names starting with it first ("egg" → Egg before Egg white). */
+export function searchCommonFoods(query: string, limit = 8): CommonFood[] {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+  const score = (f: CommonFood) => {
+    const name = f.name.toLowerCase();
+    if (name === q) return 0;
+    if (name.startsWith(q)) return 1;
+    if (name.split(/[\s,]+/).some((w) => w.startsWith(q))) return 2;
+    if (f.aliases?.some((a) => a.startsWith(q))) return 3;
+    if (name.includes(q) || f.aliases?.some((a) => a.includes(q))) return 4;
+    return null;
+  };
+  return COMMON_FOODS.flatMap((f) => {
+    const s = score(f);
+    return s === null ? [] : [{ f, s }];
+  })
+    .sort((a, b) => a.s - b.s || a.f.name.localeCompare(b.f.name))
+    .slice(0, limit)
+    .map(({ f }) => f);
+}
+
+/** "1 cup · 148 g" (or ml for drinks). */
+export function measureLabel(food: { basis: string }, measure: Measure): string {
+  return `${measure.label} · ${Math.round(measure.grams * 10) / 10} ${food.basis === 'per_100ml' ? 'ml' : 'g'}`;
+}

@@ -1,0 +1,128 @@
+name: Release APK
+
+# A release is published when the app version in app.json changes (tag v<version>),
+# or when someone pushes a v* tag matching it. Versions that already have a release are
+# skipped. Builds from branches other than main, and versions with a suffix, are pre-releases.
+# The rules live in scripts/release-info.js (tested).
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+    paths: ['app.json', '.github/workflows/release.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      prerelease: ${{ steps.tag.outputs.prerelease }}
+      skip: ${{ steps.tag.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Work out the release tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/release-info.js >> "$GITHUB_OUTPUT"
+          TAG=$(node scripts/release-info.js | sed -n 's/^tag=//p')
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck, lint and tests
+        run: npm run check
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+        with:
+          # The action's default list asks for the removed 'tools' package and fails.
+          packages: platform-tools
+
+      # The key comes from the repo's Actions secrets. A copy of the repo that still has android-signing/ committed
+      # (the private original) builds without them.
+      - name: Release key from secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.REPFUEL_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.REPFUEL_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.REPFUEL_KEY_PASSWORD }}
+        run: |
+          if [ -f android-signing/signing.properties ] && [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Using the committed android-signing/ key."
+            exit 0
+          fi
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Add the REPFUEL_KEYSTORE_BASE64, REPFUEL_STORE_PASSWORD and REPFUEL_KEY_PASSWORD secrets (Settings › Secrets and variables › Actions)."
+            exit 1
+          fi
+          mkdir -p android-signing
+          echo "$KEYSTORE_BASE64" | base64 --decode > android-signing/repfuel-release.keystore
+          {
+            echo "storeFile=repfuel-release.keystore"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=repfuel"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > android-signing/signing.properties
+
+      - name: Generate the Android project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Version code grows with every build so updates install over the old app
+        run: echo "REPFUEL_VERSION_CODE=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+
+      - name: Build signed release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+
+      - name: Check the APK is signed with RepFuel's key
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          "$APKSIGNER" verify --print-certs "$APK" | tee signer.txt
+          grep -q "CN=RepFuel" signer.txt
+          mv "$APK" "RepFuel-${TAG}.apk"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: RepFuel ${{ env.TAG }}
+          files: RepFuel-${{ env.TAG }}.apk
+          prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
+          make_latest: ${{ needs.prepare.outputs.prerelease == 'true' && 'false' || 'true' }}
+          body: |
+            **Install on your phone:** download `RepFuel-${{ env.TAG }}.apk` below, open it, and allow your browser to install apps if Android asks. Updates install over the previous version and keep your data.
+
+            Built from `${{ github.ref_name }}` at ${{ github.sha }}. Version code ${{ env.REPFUEL_VERSION_CODE }}.

@@ -1,0 +1,10 @@
+{
+  "code": "4000000000002",
+  "status": 1,
+  "product": {
+    "product_name": "Mystery Granola",
+    "brands": "",
+    "quantity": "500 g",
+    "nutriments": { "energy-kcal_100g": 450, "fat_100g": 18 }
+  }
+}
