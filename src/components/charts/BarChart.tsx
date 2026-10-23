@@ -55,7 +55,8 @@ export function BarChart({ values, accessibilityLabel, color, faded, barColors, 
             x={Math.min(t.i * slot, width - 22)}
             y={height + X_LABELS - 3}
             fill={colors.text2}
-            fontSize={10}>
+            fontSize={10}
+            fontFamily={fonts.regular}>
             {t.label}
           </SvgText>
         ))}
