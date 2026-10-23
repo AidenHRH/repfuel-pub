@@ -15,6 +15,10 @@ type Props = {
   suffix?: string;
   error?: string;
   autoFocus?: boolean;
+  /** Hides what's typed (passwords). */
+  secureTextEntry?: boolean;
+  /** For emails and passwords: no capitals or autocorrect. */
+  plain?: boolean;
   /** Defaults to the visible label. */
   accessibilityLabel?: string;
   /** To focus the field from elsewhere, e.g. a "Type the number" button. */
@@ -31,6 +35,8 @@ export function TextField({
   suffix,
   error,
   autoFocus,
+  secureTextEntry,
+  plain,
   accessibilityLabel,
   inputRef,
 }: Props) {
@@ -49,6 +55,9 @@ export function TextField({
           placeholderTextColor={colors.text2}
           keyboardType={keyboardType}
           autoFocus={autoFocus}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize={plain ? 'none' : undefined}
+          autoCorrect={plain ? false : undefined}
           selectionColor={colors.pro}
           style={{
             flex: 1,

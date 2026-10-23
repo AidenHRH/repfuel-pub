@@ -26,32 +26,56 @@ async function openSettings() {
   return screen.findByRole('button', { name: /Turn on cloud backup|Sync now/ });
 }
 
-test('sign in with an emailed code, then it backs up straight away', async () => {
+async function signInWith(email: string, password: string, button: 'Sign in' | 'Create account' = 'Sign in') {
+  await fireEvent.press(screen.getByRole('button', { name: 'Turn on cloud backup' }));
+  await fireEvent.changeText(screen.getByLabelText('Email'), email);
+  await fireEvent.changeText(screen.getByLabelText('Password'), password);
+  await fireEvent.press(screen.getByRole('button', { name: button }));
+}
+
+test('sign in with email and password, then it backs up straight away', async () => {
   const fake = fakeCloud(null);
   __setFake(fake);
   await createRecipe(mockDb, { name: 'Oats', portionsMade: 1, ingredients: [] });
   await openSettings();
-  await fireEvent.press(screen.getByRole('button', { name: 'Turn on cloud backup' }));
-  await fireEvent.changeText(screen.getByLabelText('Email'), 'me@example.com');
-  await fireEvent.press(screen.getByRole('button', { name: 'Send code' }));
-  expect(fake.state.codeSentTo).toBe('me@example.com');
-  await fireEvent.changeText(await screen.findByLabelText('Code'), '123456');
-  await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  await signInWith('me@example.com', 'right-password');
   expect(await screen.findByText('me@example.com')).toBeTruthy();
   expect(await screen.findByText('14:32 today')).toBeTruthy();
   expect([...fake.files.keys()]).toEqual(['user-1/backup-2026-10-23.json']);
 });
 
-test('a wrong code says so and stays on the code', async () => {
+test('the password is hidden while typing', async () => {
   __setFake(fakeCloud(null));
   await openSettings();
   await fireEvent.press(screen.getByRole('button', { name: 'Turn on cloud backup' }));
-  await fireEvent.changeText(screen.getByLabelText('Email'), 'me@example.com');
-  await fireEvent.press(screen.getByRole('button', { name: 'Send code' }));
-  await fireEvent.changeText(await screen.findByLabelText('Code'), '000000');
-  await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
-  expect(await screen.findByText(/That code didn’t work/)).toBeTruthy();
-  expect(screen.getByLabelText('Code')).toBeTruthy();
+  expect(screen.getByLabelText('Password').props.secureTextEntry).toBe(true);
+});
+
+test('a wrong password says so and keeps the form open', async () => {
+  __setFake(fakeCloud(null));
+  await openSettings();
+  await signInWith('me@example.com', 'nope-nope');
+  expect(await screen.findByText(/That email and password don’t match/)).toBeTruthy();
+  expect(screen.getByLabelText('Password')).toBeTruthy();
+});
+
+test('create an account the first time', async () => {
+  const fake = fakeCloud(null);
+  __setFake(fake);
+  await openSettings();
+  await signInWith('friend@example.com', 'short', 'Create account');
+  expect(await screen.findByText(/at least 6 characters/)).toBeTruthy();
+  await fireEvent.changeText(screen.getByLabelText('Password'), 'long-enough');
+  await fireEvent.press(screen.getByRole('button', { name: 'Create account' }));
+  expect(await screen.findByText('friend@example.com')).toBeTruthy();
+  expect(fake.state.accounts.get('friend@example.com')).toBe('long-enough');
+});
+
+test('creating an account for an email that has one says to sign in instead', async () => {
+  __setFake(fakeCloud(null));
+  await openSettings();
+  await signInWith('me@example.com', 'whatever-123', 'Create account');
+  expect(await screen.findByText(/already has an account\. Sign in instead/)).toBeTruthy();
 });
 
 test('signing in on an empty phone offers the backup, and restores it', async () => {
@@ -63,11 +87,7 @@ test('signing in on an empty phone offers the backup, and restores it', async ()
   const alert = jest.spyOn(Alert, 'alert');
 
   await openSettings();
-  await fireEvent.press(screen.getByRole('button', { name: 'Turn on cloud backup' }));
-  await fireEvent.changeText(screen.getByLabelText('Email'), 'me@example.com');
-  await fireEvent.press(screen.getByRole('button', { name: 'Send code' }));
-  await fireEvent.changeText(await screen.findByLabelText('Code'), '123456');
-  await fireEvent.press(screen.getByRole('button', { name: 'Sign in' }));
+  await signInWith('me@example.com', 'right-password');
 
   await act(async () => undefined);
   const offer = alert.mock.calls.find((c) => c[0] === 'Restore your backup?');

@@ -5,20 +5,14 @@ One-off steps in the Supabase dashboard for the `repfuel` project (the app alrea
 
 1. **Storage and rules.** SQL Editor › New query › paste all of `supabase/setup.sql` › **Run**. It creates the private
    `backups` bucket and the rules that let each account use only its own folder.
-2. **Put the code in the sign-in emails.** Authentication › Emails (Email Templates). Edit both **Confirm signup**
-   (first sign-in) and **Magic Link** (later sign-ins). Set the subject to `Your RepFuel code` and the body to:
-
-   ```html
-   <h2>Your RepFuel code</h2>
-   <p>Enter this code in RepFuel: <strong>{{ .Token }}</strong></p>
-   <p>If you didn't ask for it, you can ignore this email.</p>
-   ```
-
-   Save each one.
-3. That's all. In RepFuel: Settings › Cloud backup › Turn on cloud backup › your email › Send code › type the code.
+2. **No sign-in emails.** Authentication › Sign In / Providers › **Email**: turn **off Confirm email** and save. RepFuel
+   signs in with an email and password, so no emails are sent (the free plan's email templates are locked without
+   your own email service, and its sender allows only a few emails an hour).
+3. That's all. In RepFuel: Settings › Cloud backup › Turn on cloud backup › your email and a password › Create account
+   (the first time; Sign in on another phone).
 
 Notes:
-- Supabase's built-in email sender allows only a few emails an hour, which is plenty for a couple of people.
+- Forgotten password: in Supabase › Authentication › Users, open the account and set a new password.
 - A free project pauses after a week with no use. RepFuel backs up whenever it's opened online, so daily use keeps it
   awake. If it does pause, Supabase › the project › **Restore project**; nothing is lost.
 - The project owner can see every account's backups in Storage. Tell anyone you share RepFuel with.

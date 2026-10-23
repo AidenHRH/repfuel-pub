@@ -15,11 +15,21 @@ export class CloudError extends Error {
 
 export type CloudUser = { id: string; email: string | null };
 
-/** Signing in with an emailed 6-digit code. */
+/** Why signing in or creating an account was refused. */
+export type SignInProblem = 'wrong_password' | 'already_registered' | 'weak_password' | 'needs_confirming';
+
+export class SignInError extends Error {
+  constructor(readonly problem: SignInProblem) {
+    super(problem);
+    this.name = 'SignInError';
+  }
+}
+
+/** Signing in with an email and password (no emails are sent). Refusals throw SignInError, failures CloudError. */
 export interface CloudAuth {
   currentUser(): Promise<CloudUser | null>;
-  sendCode(email: string): Promise<void>;
-  verifyCode(email: string, code: string): Promise<CloudUser>;
+  signIn(email: string, password: string): Promise<CloudUser>;
+  createAccount(email: string, password: string): Promise<CloudUser>;
   signOut(): Promise<void>;
 }
 

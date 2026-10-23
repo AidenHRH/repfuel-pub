@@ -1,6 +1,7 @@
 # Cloud backup with Supabase — design
 
-Status: approved (2026-10-23).
+Status: approved (2026-10-23). Changed 2026-10-23: sign-in is email and password, not an emailed code (the owner's
+choice: Supabase's free plan locks the email templates without a custom email service).
 
 ## Why
 

@@ -1,12 +1,13 @@
 import { File } from 'expo-file-system';
 
 import type { Cloud, CloudUser } from '@/services/cloud/types';
-import { CloudError, type CloudFailure } from '@/services/cloud/types';
+import { CloudError, SignInError, type CloudFailure } from '@/services/cloud/types';
 
 /** An in-memory stand-in for the backup server: files by path, one account, and a switch to make it fail. */
 export function fakeCloud(user: CloudUser | null = { id: 'user-1', email: 'me@example.com' }) {
   const files = new Map<string, string>();
-  const state = { user, failWith: null as CloudFailure | null, codeSentTo: null as string | null };
+  const accounts = new Map<string, string>([['me@example.com', 'right-password']]);
+  const state = { user, failWith: null as CloudFailure | null, accounts };
   const check = () => {
     if (state.failWith) throw new CloudError(state.failWith);
   };
@@ -14,14 +15,18 @@ export function fakeCloud(user: CloudUser | null = { id: 'user-1', email: 'me@ex
   const cloud: Cloud = {
     auth: {
       currentUser: async () => state.user,
-      sendCode: async (email) => {
+      signIn: async (email, password) => {
         check();
-        state.codeSentTo = email;
-      },
-      verifyCode: async (email, code) => {
-        check();
-        if (code !== '123456') throw new CloudError('other', 'That code isn’t right');
+        if (accounts.get(email) !== password) throw new SignInError('wrong_password');
         state.user = { id: 'user-1', email };
+        return state.user;
+      },
+      createAccount: async (email, password) => {
+        check();
+        if (accounts.has(email)) throw new SignInError('already_registered');
+        if (password.length < 6) throw new SignInError('weak_password');
+        accounts.set(email, password);
+        state.user = { id: 'user-2', email };
         return state.user;
       },
       signOut: async () => {

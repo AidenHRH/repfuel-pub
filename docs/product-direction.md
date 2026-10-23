@@ -77,7 +77,7 @@ Design: `docs/superpowers/specs/2026-10-22-redesign-coaching-health-design.md`; 
   setup on a new install (age, height, weight, goal; BMI; realistic suggested targets,
   `docs/superpowers/specs/2026-10-23-welcome-setup-design.md`).
 - Done (0.21): cloud backup with Supabase (`docs/superpowers/specs/2026-10-23-cloud-backup-design.md`): sign in
-  with an emailed code; data and recipe photos back up to your own private folder when the app opens online and with
+  with an email and password; data and recipe photos back up to your own private folder when the app opens online and with
   Sync now; 14 days kept; Restore from cloud (offered on a new phone). Setup: `docs/cloud-backup-setup.md`.
 - Next: Health Connect with a Health screen
   (smart scales, fitness trackers, running apps), then plans and coaching inside your training split.

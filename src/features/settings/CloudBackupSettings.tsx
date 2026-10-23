@@ -20,15 +20,23 @@ import { failureMessage, lastBackedUpLabel } from '@/domain/cloudText';
 import { cloudEvents } from '@/features/cloud/events';
 import { nutritionEvents } from '@/features/nutrition/events';
 import { workoutEvents } from '@/features/workouts/events';
-import { CloudError, getCloud, type CloudUser } from '@/services/cloud';
+import { CloudError, getCloud, SignInError, type CloudUser, type SignInProblem } from '@/services/cloud';
 import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/tokens';
+
+const PROBLEMS: Record<SignInProblem, string> = {
+  wrong_password: 'That email and password don’t match. If you’re new here, tap Create account.',
+  already_registered: 'That email already has an account. Sign in instead.',
+  weak_password: 'Use a password of at least 6 characters.',
+  needs_confirming:
+    'Supabase is asking for email confirmation. In Supabase › Authentication › Sign In / Providers › Email, turn off Confirm email, then try again.',
+};
 
 const longDate = (day: string) =>
   new Date(`${day}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
 /**
- * Cloud backup: sign in with an emailed code, then the data and recipe photos back up to the person's own private
+ * Cloud backup: sign in with an email and password, then the data and recipe photos back up to the person's own private
  * folder on the server, automatically and with Sync now; Restore from cloud brings them back on a new phone.
  */
 export function CloudBackupSettings() {
@@ -40,8 +48,7 @@ export function CloudBackupSettings() {
   const [busy, setBusy] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [codeSent, setCodeSent] = useState(false);
+  const [password, setPassword] = useState('');
   const [signInError, setSignInError] = useState<string | null>(null);
 
   const [version, setVersion] = useState(0);
@@ -105,40 +112,29 @@ export function CloudBackupSettings() {
     );
   };
 
-  const sendCode = async () => {
+  const signIn = async (mode: 'signIn' | 'create') => {
     setSignInError(null);
-    setBusy(true);
-    try {
-      await cloud.auth.sendCode(email);
-      setCodeSent(true);
-    } catch (e) {
-      setSignInError(
-        e instanceof CloudError && e.kind !== 'other'
-          ? failureMessage(e.kind)
-          : 'Couldn’t send a code. Check the email and try again.',
-      );
+    if (mode === 'create' && password.length < 6) {
+      setSignInError(PROBLEMS.weak_password);
+      return;
     }
-    setBusy(false);
-  };
-
-  const signIn = async () => {
-    setSignInError(null);
     setBusy(true);
     let who: CloudUser;
     try {
-      who = await cloud.auth.verifyCode(email, code);
+      who = mode === 'create' ? await cloud.auth.createAccount(email, password) : await cloud.auth.signIn(email, password);
     } catch (e) {
       setBusy(false);
       setSignInError(
-        e instanceof CloudError && e.kind !== 'other'
-          ? failureMessage(e.kind)
-          : 'That code didn’t work. Check it, or send a new one.',
+        e instanceof SignInError
+          ? PROBLEMS[e.problem]
+          : e instanceof CloudError && e.kind !== 'other'
+            ? failureMessage(e.kind)
+            : 'Couldn’t sign in. Please try again.',
       );
       return;
     }
     setSigningIn(false);
-    setCodeSent(false);
-    setCode('');
+    setPassword('');
     setBusy(false);
     setUser(who);
     // A new phone: offer the backup before anything is uploaded over it.
@@ -173,40 +169,32 @@ export function CloudBackupSettings() {
           title="Cloud backup"
           onClose={() => {
             setSigningIn(false);
-            setCodeSent(false);
             setSignInError(null);
           }}>
           <View style={{ backgroundColor: colors.well, borderRadius: 18 }}>
-            <TextField label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
-            {codeSent ? (
-              <>
-                <View style={{ height: 1, backgroundColor: colors.sep, marginLeft: spacing.lg }} />
-                <TextField label="Code" value={code} onChangeText={setCode} keyboardType="number-pad" placeholder="6 digits" />
-              </>
-            ) : null}
+            <TextField label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" plain />
+            <View style={{ height: 1, backgroundColor: colors.sep, marginLeft: spacing.lg }} />
+            <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry plain />
           </View>
-          {codeSent ? <Text variant="caption" color="text2">{`We emailed a 6-digit code to ${email.trim()}.`}</Text> : null}
+          <Text variant="caption" color="text2">
+            New here? Choose a password and tap Create account. On another phone, sign in with the same details.
+          </Text>
           {signInError ? (
             <Text variant="callout" color="danger">
               {signInError}
             </Text>
           ) : null}
-          {codeSent ? (
-            <>
-              <Button
-                label={busy ? 'Signing in…' : 'Sign in'}
-                disabled={busy || code.trim().length < 6}
-                onPress={() => void signIn()}
-              />
-              <Button variant="plain" label="Send a new code" disabled={busy} onPress={() => void sendCode()} />
-            </>
-          ) : (
-            <Button
-              label={busy ? 'Sending…' : 'Send code'}
-              disabled={busy || !/\S+@\S+\.\S+/.test(email)}
-              onPress={() => void sendCode()}
-            />
-          )}
+          <Button
+            label={busy ? 'Signing in…' : 'Sign in'}
+            disabled={busy || !/\S+@\S+\.\S+/.test(email) || !password}
+            onPress={() => void signIn('signIn')}
+          />
+          <Button
+            variant="secondary"
+            label="Create account"
+            disabled={busy || !/\S+@\S+\.\S+/.test(email) || !password}
+            onPress={() => void signIn('create')}
+          />
         </Sheet>
       </>
     );

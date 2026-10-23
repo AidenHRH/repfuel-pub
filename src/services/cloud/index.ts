@@ -1,10 +1,10 @@
 import 'expo-sqlite/localStorage/install';
 
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type Session, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { File } from 'expo-file-system';
 
 import { BACKUP_BUCKET, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from './config';
-import { CloudError, type Cloud, type CloudFailure, type CloudUser } from './types';
+import { CloudError, SignInError, type Cloud, type CloudFailure, type CloudUser } from './types';
 
 export * from './types';
 
@@ -42,6 +42,29 @@ async function run<T>(task: () => Promise<{ data: T; error: unknown }>): Promise
   return result.data;
 }
 
+type SignedIn = { user: User | null; session: Session | null };
+
+/** Runs a sign-in call, turning Supabase's refusals into SignInError and other failures into CloudError. */
+async function attempt<T>(task: () => Promise<{ data: T; error: unknown }>): Promise<T> {
+  let result: { data: T; error: unknown };
+  try {
+    result = await task();
+  } catch (error) {
+    throw failure(error);
+  }
+  const e = result.error as { code?: string; status?: number; message?: string } | null;
+  if (e) {
+    const code = e.code ?? '';
+    if (code === 'invalid_credentials' || /invalid login/i.test(e.message ?? '')) throw new SignInError('wrong_password');
+    if (code === 'user_already_exists' || code === 'email_exists' || /already registered/i.test(e.message ?? ''))
+      throw new SignInError('already_registered');
+    if (code === 'weak_password' || /password should/i.test(e.message ?? '')) throw new SignInError('weak_password');
+    if (code === 'email_not_confirmed') throw new SignInError('needs_confirming');
+    throw failure(e);
+  }
+  return result.data;
+}
+
 const toUser = (u: { id: string; email?: string | null }): CloudUser => ({ id: u.id, email: u.email ?? null });
 
 async function signedUrl(path: string): Promise<string> {
@@ -60,13 +83,16 @@ const cloud: Cloud = {
         return null;
       }
     },
-    async sendCode(email) {
-      await run(() => supabase().auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } }));
+    async signIn(email, password) {
+      const result = await attempt<SignedIn>(() => supabase().auth.signInWithPassword({ email: email.trim(), password }));
+      if (!result.user) throw new SignInError('wrong_password');
+      return toUser(result.user);
     },
-    async verifyCode(email, code) {
-      const data = await run(() => supabase().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' }));
-      if (!data.user) throw new CloudError('other', 'That code didn’t work');
-      return toUser(data.user);
+    async createAccount(email, password) {
+      const result = await attempt<SignedIn>(() => supabase().auth.signUp({ email: email.trim(), password }));
+      // With "Confirm email" still on in Supabase, the account waits for an email link and there's no session.
+      if (!result.session || !result.user) throw new SignInError('needs_confirming');
+      return toUser(result.user);
     },
     async signOut() {
       await run(async () => ({ data: null, error: (await supabase().auth.signOut()).error }));
