@@ -99,8 +99,10 @@ jobs:
       - name: Generate the Android project
         run: npx expo prebuild --platform android --no-install
 
+      # Android only installs an update with a higher version code. The original private repo's builds reached 135,
+      # and this repo's run numbers started again from 1, so its codes start at 1000 to stay above every old build.
       - name: Version code grows with every build so updates install over the old app
-        run: echo "REPFUEL_VERSION_CODE=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+        run: echo "REPFUEL_VERSION_CODE=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
 
       - name: Build signed release APK
         working-directory: android
