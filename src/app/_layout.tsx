@@ -107,6 +107,20 @@ export default function RootLayout() {
                       }}
                     />
                     <Stack.Screen
+                      name="lift-progress/[id]"
+                      options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                      }}
+                    />
+                    <Stack.Screen
+                      name="muscle/[group]"
+                      options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                      }}
+                    />
+                    <Stack.Screen
                       name="recipe-book/index"
                       options={{
                         presentation: 'modal',

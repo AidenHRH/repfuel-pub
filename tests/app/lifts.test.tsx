@@ -81,6 +81,7 @@ test('Progress lists records, labels the estimate, and follows edits', async () 
     sets: [{ weightKg: 85, reps: 5, effort: null }],
   });
   await renderRouter(appDir, { initialUrl: '/progress' });
+  await fireEvent.press(await screen.findByRole('button', { name: 'Records' }));
   const card = within(await screen.findByLabelText('Records for Barbell bench press'));
   expect(card.getByText('85 kg × 5')).toBeTruthy();
   expect(card.getByText(/estimate/)).toBeTruthy();
@@ -258,6 +259,7 @@ test('Progress shows the longest plank and the most ab-wheel reps', async () => 
     sets: [{ weightKg: null, reps: 15, effort: null }],
   });
   await renderRouter(appDir, { initialUrl: '/progress' });
+  await fireEvent.press(await screen.findByRole('button', { name: 'Records' }));
   const plank = within(await screen.findByLabelText('Records for Plank'));
   expect(plank.getByText('1:30')).toBeTruthy();
   expect(plank.getByText('Longest hold')).toBeTruthy();

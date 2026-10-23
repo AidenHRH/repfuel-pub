@@ -18,6 +18,8 @@ export type Palette = {
   track: string;
   bar: string;
   danger: string;
+  /** Progress going the right way (a gain, effort easing). */
+  up: string;
   /** Ring fills: not text, so they can be brighter than the text colours in light mode. */
   ringKcal: string;
   ringPro: string;
@@ -53,6 +55,7 @@ export const palettes: Record<ThemeName, Palette> = {
     track: 'rgba(255,255,255,0.10)',
     bar: 'rgba(22,22,24,0.88)',
     danger: '#FF7B72',
+    up: '#30D158',
     ringKcal: '#FFB547',
     ringPro: '#6CB4FF',
     pr: '#FFD25A',
@@ -80,6 +83,7 @@ export const palettes: Record<ThemeName, Palette> = {
     track: 'rgba(0,0,0,0.08)',
     bar: 'rgba(249,249,251,0.9)',
     danger: '#C42B1C',
+    up: '#167A35',
     ringKcal: '#F5A524',
     ringPro: '#2F80ED',
     pr: '#7A5A00',

@@ -54,7 +54,7 @@ function byWeek<T extends { at: string }>(items: T[], weeks: string[]): Map<stri
 }
 
 /** Average effort each week; null for a week with nothing rated. */
-export function weeklyEffort(sets: LiftSet[], weeks: string[]): (number | null)[] {
+export function weeklyEffort(sets: { at: string; effort: number | null }[], weeks: string[]): (number | null)[] {
   const map = byWeek(sets, weeks);
   return weeks.map((w) => {
     const m = mean(map.get(w)!.flatMap((s) => (s.effort == null ? [] : [s.effort])));
