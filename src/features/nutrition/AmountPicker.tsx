@@ -10,7 +10,7 @@ import { useDb } from '@/database/DatabaseProvider';
 import { recordUse } from '@/database/repositories/tourRepository';
 import { measureLabel, type Measure } from '@/domain/commonFoods';
 import { friendlyNumber } from '@/domain/format';
-import { foodMeasures, packHint } from '@/domain/measures';
+import { countPhrase, foodMeasures, packHint } from '@/domain/measures';
 import { parseAmount } from '@/domain/parse';
 import { PORTIONS } from '@/domain/portions';
 import type { FoodProduct } from '@/domain/types';
@@ -21,7 +21,7 @@ import { TourTarget } from '@/features/tour/TourTarget';
 const SERVINGS = PORTIONS.map(String);
 
 export type AmountFood = Pick<FoodProduct, 'basis' | 'servingSize' | 'presetId' | 'packSize'> &
-  Partial<Pick<FoodProduct, 'pieceG' | 'pieceLabel'>>;
+  Partial<Pick<FoodProduct, 'pieceG' | 'pieceLabel' | 'name'>>;
 
 export type AmountState = ReturnType<typeof useAmount>;
 
@@ -117,21 +117,6 @@ export function AmountPicker({ food, state, autoFocus }: { food: AmountFood; sta
         </View>
       ) : null}
       {perServing || measure ? (
-        <View style={{ padding: spacing.md, gap: spacing.sm }}>
-          <Segmented
-            accessibilityLabel="Servings"
-            value={SERVINGS.find((s) => state.asAmount(s) === String(amount)) ?? ''}
-            onChange={(s) => state.setAmountText(state.asAmount(s))}
-            options={SERVINGS.map((s) => ({ value: s, label: friendlyNumber(Number(s)) }))}
-          />
-          {measure ? (
-            <Text variant="caption" color="text2" numeric>
-              {`${measure.label} = ${friendlyNumber(measure.grams)} ${unit}`}
-            </Text>
-          ) : null}
-        </View>
-      ) : null}
-      {perServing || measure ? (
         <TourTarget id="product-how-many">
           <ListRow label="How many">
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
@@ -166,11 +151,31 @@ export function AmountPicker({ food, state, autoFocus }: { food: AmountFood; sta
                 style={{ paddingHorizontal: spacing.md }}
               />
               <Text variant="callout" color="text2" numberOfLines={1} style={{ flexShrink: 1 }}>
-                {perServing ? 'servings' : `× ${measure!.label}`}
+                {perServing ? 'servings' : countNoun(count, measure!, food.name)}
               </Text>
             </View>
           </ListRow>
         </TourTarget>
+      ) : null}
+      {perServing || measure ? (
+        <View style={{ padding: spacing.md, gap: spacing.sm }}>
+          <Segmented
+            accessibilityLabel="Servings"
+            value={SERVINGS.find((s) => state.asAmount(s) === String(amount)) ?? ''}
+            onChange={(s) => state.setAmountText(state.asAmount(s))}
+            options={SERVINGS.map((s) => ({ value: s, label: friendlyNumber(Number(s)) }))}
+          />
+          {measure ? (
+            <Text variant="caption" color="text2" numeric>
+              {`${measure.label} = ${friendlyNumber(measure.grams)} ${unit}`}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+      {measure && !perServing ? (
+        <Text variant="caption" color="text2" style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm }}>
+          Or weigh it
+        </Text>
       ) : null}
       {perServing ? null : (
         <TextField
@@ -189,4 +194,9 @@ export function AmountPicker({ food, state, autoFocus }: { food: AmountFood; sta
       ) : null}
     </>
   );
+}
+
+/** "biscuits", "biscuit", "large": the stepper's unit, from the size's label. */
+function countNoun(count: number, measure: Measure, name?: string): string {
+  return countPhrase(count > 1 ? 2 : 1, measure, name).replace(/^\S+\s/, '');
 }

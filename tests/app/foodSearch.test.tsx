@@ -76,7 +76,7 @@ test('search for a KitKat, pick how much, file it under Snacks', async () => {
   expect(screen.getByText('Additives: E322, E476')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: '½' }));
   await fireEvent.press(screen.getByRole('button', { name: 'Snack' }));
-  await fireEvent.press(screen.getByRole('button', { name: /^Log 20\.75 g · / }));
+  await fireEvent.press(screen.getByRole('button', { name: /^Log ½ serving · / }));
 
   await finishBasket();
   expect(await screen.findByLabelText('Calories 107 of 2,500. Protein 1 of 145 grams.')).toBeTruthy();
@@ -173,7 +173,7 @@ test('the product page: big numbers, favourite star, and a Log button with calor
   await screen.findByRole('header', { name: 'KitKat 4 Finger' });
   expect(screen.getByLabelText('Calories 215')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Favourite' }));
-  await fireEvent.press(screen.getByRole('button', { name: 'Log 41.5 g · 215 kcal' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Log 1 serving · 215 kcal' }));
   await finishBasket();
   const saved = (await listFoods(mockDb, { search: 'kitkat' }))[0];
   expect(saved.isFavourite).toBe(true);

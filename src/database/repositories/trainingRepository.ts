@@ -22,7 +22,11 @@ export async function trainingFeed(db: Db, limit = 60): Promise<FeedItem[]> {
     const before = all.filter((s) => s.at < lift.at);
     const own = all.filter((s) => s.workoutId === lift.workoutId);
     if (!muscles.has(lift.exerciseId)) muscles.set(lift.exerciseId, (await getExercise(db, lift.exerciseId))?.muscleGroup);
-    items.push({ kind: 'lift', lift: { ...lift, muscleGroup: muscles.get(lift.exerciseId) }, isPr: newRecords(before, own).length > 0 });
+    items.push({
+      kind: 'lift',
+      lift: { ...lift, muscleGroup: muscles.get(lift.exerciseId) },
+      isPr: newRecords(before, own).length > 0,
+    });
   }
   for (const session of classes) items.push({ kind: 'class', session });
   return items.sort((a, b) => itemAt(b).localeCompare(itemAt(a))).slice(0, limit);

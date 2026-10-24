@@ -106,6 +106,10 @@ Design: `docs/superpowers/specs/2026-10-22-redesign-coaching-health-design.md`; 
   its bar, a protein / carbs / fat card, each meal as a card (totals, photo tiles, Log; the planned dish with a
   one-tap Log; Drinks "on their own"), View diary for every item with swipe actions, Daily habits as one card
   (creatine "+ 5 g", the day's sessions, Log workout) and a round + button.
+- Done (0.24.2): count foods instead of weighing them: How many comes first ("2 sausages", "3 biscuits", "2 large
+  eggs") with ¼ to 2 and grams as "Or weigh it"; the Log button and the diary say the count; a pack's serving text
+  gives the size of one ("2 biscuits (25 g)"); new built-ins counted by the piece: sausages, bacon, ham, crumpets,
+  fish fingers, nuggets, Weetabix, hash browns.
 - Next (0.25 → 0.26, same design): goals, rewards and a weekly review; meal planning on TheMealDB with honest macros
   and Gousto-style filters.
 - Then: Health Connect with a Health screen

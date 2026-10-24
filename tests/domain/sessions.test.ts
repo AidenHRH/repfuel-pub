@@ -21,7 +21,15 @@ const cls = (id: string, at: string): FeedItem => ({
 });
 
 test('lifts within an hour of the last one are one session; a longer gap starts another', () => {
-  const sessions = groupSessions([lift('a', '11:20', 'shoulders'), lift('b', '11:45', 'shoulders'), lift('c', '17:05', 'chest'), lift('d', '17:30', 'triceps', 8, true)], {});
+  const sessions = groupSessions(
+    [
+      lift('a', '11:20', 'shoulders'),
+      lift('b', '11:45', 'shoulders'),
+      lift('c', '17:05', 'chest'),
+      lift('d', '17:30', 'triceps', 8, true),
+    ],
+    {},
+  );
   expect(sessions.map((s) => [s.name, s.items.length])).toEqual([
     ['Chest & triceps', 2],
     ['Shoulders', 2],

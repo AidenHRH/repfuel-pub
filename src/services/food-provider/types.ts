@@ -17,6 +17,8 @@ export type FoodDraft = {
   health?: HealthInfo;
   /** The shop, from its own brand or Open Food Facts' stores, when known. */
   shop?: string;
+  /** One piece, from the pack's serving text ("2 biscuits (25 g)" → a biscuit, 12.5 g), when it's counted in pieces. */
+  piece?: { label: string; grams: number };
 };
 
 /** A product found by name: its barcode (if any), picture, and draft. */

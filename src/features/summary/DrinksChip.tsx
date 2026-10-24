@@ -43,7 +43,7 @@ export function DrinksChip({ entries, isToday }: { entries: FoodLogEntry[]; isTo
               <View style={{ flex: 1 }}>
                 <Text style={{ fontFamily: fonts.medium }}>{e.name}</Text>
                 <Text variant="caption" color="text2" numeric>
-                  {`${MEAL_LABELS[e.mealCategory]} · ${amountLabel(e.amount, e.unit)}`}
+                  {`${MEAL_LABELS[e.mealCategory]} · ${e.count ?? amountLabel(e.amount, e.unit)}`}
                 </Text>
               </View>
               <Text numeric>{kcalLabel(e.nutrients, e.isApproximate)}</Text>

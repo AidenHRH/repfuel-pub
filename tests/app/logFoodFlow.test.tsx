@@ -62,7 +62,7 @@ test('a cup of blueberries: common foods come with household measures', async ()
   expect(screen.getByRole('button', { name: 'Breakfast' }).props.accessibilityState.selected).toBe(true);
   await fireEvent.press(screen.getByRole('button', { name: '1 handful · 40 g' }));
   await fireEvent.press(screen.getByRole('button', { name: '1 cup · 148 g' }));
-  await fireEvent.press(screen.getByRole('button', { name: /^Log 148 g · / }));
+  await fireEvent.press(screen.getByRole('button', { name: /^Log 1 cup · / }));
 
   await finishBasket();
   expect(await screen.findByLabelText('Calories 84 of 2,500. Protein 1 of 145 grams.')).toBeTruthy();
@@ -94,7 +94,7 @@ test('macros start at one serving and follow the amount', async () => {
   expect(screen.getByLabelText('Protein 20 g')).toBeTruthy();
   expect(screen.getByLabelText('Carbs 40 g')).toBeTruthy();
   expect(screen.getByLabelText('Fat 12 g')).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Log 100 g · 380 kcal' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Log 2 servings · 380 kcal' })).toBeTruthy();
 });
 
 test('any number of a measure: three handfuls of blueberries', async () => {
@@ -105,7 +105,7 @@ test('any number of a measure: three handfuls of blueberries', async () => {
   await fireEvent.press(screen.getByRole('button', { name: '1 handful · 40 g' }));
   await fireEvent.changeText(screen.getByLabelText('How many'), '3');
   expect(screen.getByLabelText('Amount').props.value).toBe('120');
-  expect(screen.getByRole('button', { name: 'Log 120 g · 68 kcal' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Log 3 handfuls · 68 kcal' })).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'One more' }));
   expect(screen.getByLabelText('How many').props.value).toBe('4');
   expect(screen.getByLabelText('Amount').props.value).toBe('160');

@@ -42,6 +42,8 @@ export async function saveProductFood(
   product: { barcode: string | null; draft: FoodDraft; piece?: { grams: number; label: string } },
 ): Promise<FoodProduct> {
   const { draft } = product;
+  // The owner's own answer wins over the pack's serving text.
+  const piece = product.piece ?? draft.piece;
   // Search results can carry odd codes (padded, or not a retail barcode at all): keep only real ones.
   const barcode = product.barcode ? normaliseBarcode(product.barcode) : null;
   if (!draft.name || draft.nutrients.kcal === null || draft.nutrients.proteinG === null) {
@@ -55,7 +57,7 @@ export async function saveProductFood(
       ...(!existing.imageUrl && draft.imageUrl ? { imageUrl: draft.imageUrl } : {}),
       ...(!existing.health && draft.health ? { health: draft.health } : {}),
       ...(!existing.shop && draft.shop ? { shop: draft.shop } : {}),
-      ...(!existing.pieceG && product.piece ? { pieceG: product.piece.grams, pieceLabel: product.piece.label } : {}),
+      ...(!existing.pieceG && piece ? { pieceG: piece.grams, pieceLabel: piece.label } : {}),
     };
     return Object.keys(patch).length ? updateFood(db, existing.id, patch) : existing;
   }
@@ -74,7 +76,7 @@ export async function saveProductFood(
     imageUrl: draft.imageUrl ?? null,
     health: draft.health ?? null,
     shop: draft.shop ?? null,
-    pieceG: product.piece?.grams ?? null,
-    pieceLabel: product.piece?.label ?? null,
+    pieceG: piece?.grams ?? null,
+    pieceLabel: piece?.label ?? null,
   });
 }

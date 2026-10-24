@@ -42,7 +42,7 @@ test('a drink with no size of its own: cans, glasses and bottles, logged under D
   await fireEvent.press(screen.getByRole('button', { name: '1 can · 330 ml' }));
   await fireEvent.changeText(screen.getByLabelText('How many'), '2');
   await fireEvent(screen.getByLabelText('Add to Drinks'), 'valueChange', true);
-  await fireEvent.press(screen.getByRole('button', { name: 'Log 660 ml · 277 kcal' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Log 2 cans · 277 kcal' }));
 
   await screen.findByRole('button', { name: /^Choose a day/ });
   expect(await screen.findByRole('header', { name: 'Drinks' })).toBeTruthy();

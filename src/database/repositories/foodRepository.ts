@@ -59,7 +59,14 @@ function toFood(row: Row): FoodProduct {
     servingSize: row.serving_size,
     servingUnit: row.serving_unit,
     packSize: row.pack_size ?? null,
-    nutrients: { kcal: row.kcal, proteinG: row.protein_g, carbsG: row.carbs_g, fatG: row.fat_g, fibreG: row.fibre_g, sugarG: row.sugar_g ?? null },
+    nutrients: {
+      kcal: row.kcal,
+      proteinG: row.protein_g,
+      carbsG: row.carbs_g,
+      fatG: row.fat_g,
+      fibreG: row.fibre_g,
+      sugarG: row.sugar_g ?? null,
+    },
     dataSource: row.data_source,
     isFavourite: row.is_favourite === 1,
     notes: row.notes,
@@ -254,7 +261,12 @@ export async function shopUnasked(db: Db, id: string): Promise<boolean> {
 /** Remembers what one piece of a food is called and weighs (g or ml), so it can be logged by the piece. */
 export async function setPieceSize(db: Db, id: string, grams: number, label: string): Promise<FoodProduct> {
   if (!Number.isFinite(grams) || grams <= 0) throw new RangeError('A piece must weigh more than 0');
-  await db.run('UPDATE food_product SET piece_g = ?, piece_label = ?, updated_at = ? WHERE id = ?', [grams, label.trim() || 'piece', nowIso(), id]);
+  await db.run('UPDATE food_product SET piece_g = ?, piece_label = ?, updated_at = ? WHERE id = ?', [
+    grams,
+    label.trim() || 'piece',
+    nowIso(),
+    id,
+  ]);
   return (await getFood(db, id))!;
 }
 

@@ -116,7 +116,7 @@ export function BasketCard({
           }}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${e.name}, ${amountLabel(e.amount, e.unit)}, ${kcalLabel(e.nutrients, e.isApproximate)}${isDrinkEntry(e) ? ', drink' : ''}`}
+            accessibilityLabel={`${e.name}, ${e.count ?? amountLabel(e.amount, e.unit)}, ${kcalLabel(e.nutrients, e.isApproximate)}${isDrinkEntry(e) ? ', drink' : ''}`}
             accessibilityHint="Opens to change the amount"
             onPress={() => onOpen(e)}
             style={({ pressed }) => ({
@@ -132,7 +132,7 @@ export function BasketCard({
                 {e.name}
               </Text>
               <Text variant="caption" color="text2" numeric>
-                {`${amountLabel(e.amount, e.unit)} · ${kcalLabel(e.nutrients, e.isApproximate)}${isDrinkEntry(e) ? ' · drink' : ''}${
+                {`${e.count ?? amountLabel(e.amount, e.unit)} · ${kcalLabel(e.nutrients, e.isApproximate)}${isDrinkEntry(e) ? ' · drink' : ''}${
                   e.mealCategory !== meal ? ` · ${MEAL_LABELS[e.mealCategory]}` : ''
                 }`}
               </Text>

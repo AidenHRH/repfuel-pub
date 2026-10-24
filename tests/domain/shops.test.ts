@@ -25,6 +25,17 @@ test('an own brand beats the stores list', () => {
 
 test('the shops to choose from', () => {
   expect(SHOPS).toEqual([
-    'Tesco', 'Sainsbury’s', 'Asda', 'Morrisons', 'Aldi', 'Lidl', 'Co-op', 'Waitrose', 'M&S', 'Iceland', 'Ocado', 'Booths',
+    'Tesco',
+    'Sainsbury’s',
+    'Asda',
+    'Morrisons',
+    'Aldi',
+    'Lidl',
+    'Co-op',
+    'Waitrose',
+    'M&S',
+    'Iceland',
+    'Ocado',
+    'Booths',
   ]);
 });

@@ -1,6 +1,7 @@
 import { photoFor } from '@/data/foodPhotos';
 import { localDayKey } from '@/domain/dates';
 import { drinkMeasures, isDrink } from '@/domain/drinks';
+import { countOf, countPhrase, foodMeasures } from '@/domain/measures';
 import { mealCategoryFor } from '@/domain/meals';
 import { calculateLogged, sumEntries, type DayTotals } from '@/domain/nutrition';
 import type { FoodLogEntry, FoodProduct, Loggable, LogUnit, MealCategory, Nutrients } from '@/domain/types';
@@ -41,7 +42,14 @@ function toEntry(row: Row): FoodLogEntry {
     name: row.food_name_snapshot,
     amount: row.amount,
     unit: row.unit,
-    nutrients: { kcal: row.kcal, proteinG: row.protein_g, carbsG: row.carbs_g, fatG: row.fat_g, fibreG: row.fibre_g, sugarG: row.sugar_g ?? null },
+    nutrients: {
+      kcal: row.kcal,
+      proteinG: row.protein_g,
+      carbsG: row.carbs_g,
+      fatG: row.fat_g,
+      fibreG: row.fibre_g,
+      sugarG: row.sugar_g ?? null,
+    },
     isApproximate: row.is_approximate === 1,
     loggedAt: row.logged_at,
     localDay: row.local_day,
@@ -205,12 +213,41 @@ export async function restoreEntry(db: Db, entry: FoodLogEntry): Promise<void> {
   await insert(db, entry);
 }
 
-type PhotoRow = Row & { food_image: string | null; food_preset: string | null; recipe_photo: string | null };
+type PhotoRow = Row & {
+  food_image: string | null;
+  food_preset: string | null;
+  recipe_photo: string | null;
+  food_basis: FoodProduct['basis'] | null;
+  food_serving: number | null;
+  food_pack: number | null;
+  food_piece_g: number | null;
+  food_piece_label: string | null;
+};
+
+/** "2 biscuits" when a g/ml amount is a count of one of the food's sizes. */
+function countFor(row: PhotoRow): string | undefined {
+  if (!row.food_basis || row.food_basis === 'per_serving' || (row.unit !== 'g' && row.unit !== 'ml')) return undefined;
+  const measures = foodMeasures({
+    basis: row.food_basis,
+    servingSize: row.food_serving,
+    presetId: row.food_preset,
+    packSize: row.food_pack,
+    pieceG: row.food_piece_g,
+    pieceLabel: row.food_piece_label,
+  });
+  for (const m of measures) {
+    const n = countOf(row.amount, m);
+    if (n !== null) return countPhrase(n, m, row.food_name_snapshot);
+  }
+  return undefined;
+}
 
 /** A day's entries in time order, each with its photo when there is one (the owner's, the pack's or a built-in's). */
 export async function entriesForDay(db: Db, localDay: string): Promise<FoodLogEntry[]> {
   const rows = await db.getAll<PhotoRow>(
-    `SELECT e.*, f.image_url AS food_image, f.preset_id AS food_preset, p.file_uri AS recipe_photo
+    `SELECT e.*, f.image_url AS food_image, f.preset_id AS food_preset, p.file_uri AS recipe_photo,
+            f.basis AS food_basis, f.serving_size AS food_serving, f.pack_size AS food_pack,
+            f.piece_g AS food_piece_g, f.piece_label AS food_piece_label
      FROM food_log_entry e
      LEFT JOIN food_product f ON f.id = e.food_product_id
      LEFT JOIN recipe_photo p ON p.recipe_ref = 'recipe:' || e.recipe_id
@@ -219,7 +256,8 @@ export async function entriesForDay(db: Db, localDay: string): Promise<FoodLogEn
   );
   return rows.map((row) => {
     const photo = row.recipe_photo ?? photoFor({ imageUrl: row.food_image, presetId: row.food_preset });
-    return photo ? { ...toEntry(row), photo } : toEntry(row);
+    const count = countFor(row);
+    return { ...toEntry(row), ...(photo ? { photo } : {}), ...(count ? { count } : {}) };
   });
 }
 
@@ -276,12 +314,7 @@ const RECENT_DAYS = 30;
 
 /** What was logged in the last 30 days, newest first, once each, at the amount last logged. */
 /** Recently had foods and meals, newest first; with `meal`, what was had at that meal comes first. */
-export async function recentItems(
-  db: Db,
-  now: Date = new Date(),
-  limit = 12,
-  meal?: MealCategory,
-): Promise<Loggable[]> {
+export async function recentItems(db: Db, now: Date = new Date(), limit = 12, meal?: MealCategory): Promise<Loggable[]> {
   const since = new Date(now.getTime() - RECENT_DAYS * 86_400_000).toISOString();
   const rows = await db.getAll<{ item_kind: 'food' | 'recipe'; item_id: string }>(
     `SELECT CASE WHEN e.recipe_id IS NOT NULL THEN 'recipe' ELSE 'food' END AS item_kind,

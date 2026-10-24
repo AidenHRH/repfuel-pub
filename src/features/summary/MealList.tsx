@@ -46,7 +46,7 @@ const entryLabel = (entry: FoodLogEntry) => {
   const portion =
     entry.amount === 1 && (entry.unit === 'portion' || entry.unit === 'serving')
       ? ''
-      : `, ${amountLabel(entry.amount, entry.unit)}`;
+      : `, ${entry.count ?? amountLabel(entry.amount, entry.unit)}`;
   return `${entry.name}, ${localTimeLabel(entry.loggedAt)}${portion}, ${kcalLabel(entry.nutrients, entry.isApproximate)}, ${roundForDisplay(entry.nutrients.proteinG, 'g')} grams protein`;
 };
 
@@ -215,7 +215,7 @@ function EntryRow({
   const portion =
     entry.amount === 1 && (entry.unit === 'portion' || entry.unit === 'serving')
       ? ''
-      : ` · ${amountLabel(entry.amount, entry.unit)}`;
+      : ` · ${entry.count ?? amountLabel(entry.amount, entry.unit)}`;
   const kcal = kcalLabel(entry.nutrients, entry.isApproximate);
   const act = (action: () => void) => () => {
     swipeable.current?.close();

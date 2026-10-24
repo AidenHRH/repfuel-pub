@@ -210,8 +210,16 @@ export default function WorkoutsScreen() {
                     item={item}
                     day={day.label}
                     first={i === 0}
-                    onPress={() => router.push(item.kind === 'lift' ? `/lift/${item.lift.workoutId}` : `/class/${item.session.id}`)}
-                    onLongPress={() => holdOptions(item, session, all.slice(si + 1).some((o) => o.kind === 'strength'))}
+                    onPress={() =>
+                      router.push(item.kind === 'lift' ? `/lift/${item.lift.workoutId}` : `/class/${item.session.id}`)
+                    }
+                    onLongPress={() =>
+                      holdOptions(
+                        item,
+                        session,
+                        all.slice(si + 1).some((o) => o.kind === 'strength'),
+                      )
+                    }
                   />
                 ))}
               </View>

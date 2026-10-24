@@ -120,10 +120,17 @@ export const BUILT_IN_PHOTOS: Record<string, string | null> = {
   feta: 'Feta',
   parmesan: 'Parmesan',
   'whey-protein': null,
+  'pork-sausage': 'Sausages',
+  'bacon-rasher': 'Bacon',
+  'ham-slice': 'Ham',
+  'fish-fingers': null,
+  'chicken-nuggets': null,
+  crumpet: null,
+  weetabix: null,
+  'hash-brown': null,
 };
 
-const ingredientImage = (name: string) =>
-  `https://www.themealdb.com/images/ingredients/${encodeURIComponent(name)}-Small.png`;
+const ingredientImage = (name: string) => `https://www.themealdb.com/images/ingredients/${encodeURIComponent(name)}-Small.png`;
 
 /** The photo for a food: its pack picture, else its built-in food's picture, else none (a letter tile). */
 export function photoFor(food: { imageUrl: string | null; presetId: string | null }): string | null {

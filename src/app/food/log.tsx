@@ -25,6 +25,7 @@ import { getCommonFood } from '@/domain/commonFoods';
 import { isDrink } from '@/domain/drinks';
 import { amountLabel, kcalLabel } from '@/domain/format';
 import { MEAL_CATEGORIES, MEAL_LABELS, mealCategoryFor } from '@/domain/meals';
+import { countOf, countPhrase } from '@/domain/measures';
 import { calculateLogged, roundForDisplay } from '@/domain/nutrition';
 import type { FoodProduct, MealCategory } from '@/domain/types';
 import { logAndAnnounce, nutritionEvents } from '@/features/nutrition/events';
@@ -121,6 +122,8 @@ export default function LogFoodAmountScreen() {
             imageUrl: draft.imageUrl ?? null,
             presetId: null,
             health: draft.health ?? null,
+            pieceG: draft.piece?.grams ?? null,
+            pieceLabel: draft.piece?.label ?? null,
           }
         : null;
 
@@ -147,6 +150,9 @@ export default function LogFoodAmountScreen() {
 
   const category: MealCategory = picked ?? (isDrink(food) ? 'drink' : mealCategoryFor(new Date()));
   const { perServing, unit, amount, valid } = how;
+  // "2 biscuits" when the amount is a count of the chosen size, else "30 g".
+  const counted = perServing ? null : countOf(amount, how.measure);
+  const amountText = counted && how.measure ? countPhrase(counted, how.measure, food.name) : amountLabel(amount, unit);
   const preset = food.presetId ? getCommonFood(food.presetId) : null;
   const preview = valid
     ? calculateLogged(
@@ -205,7 +211,7 @@ export default function LogFoodAmountScreen() {
           </Text>
           <TourTarget id="product-log">
             <Button
-              label={valid && preview ? `Log ${amountLabel(amount, unit)} · ${kcalText} kcal` : 'Log'}
+              label={valid && preview ? `Log ${amountText} · ${kcalText} kcal` : 'Log'}
               disabled={!valid}
               onPress={log}
               haptic

@@ -123,11 +123,10 @@ test('search for a snack, and keep it as a tile for next time', async () => {
 
   await screen.findByRole('header', { name: 'Latte' });
   await fireEvent(screen.getByLabelText('Add to Snacks'), 'valueChange', true);
-  await fireEvent.press(screen.getByRole('button', { name: /^Log 350 ml · / }));
+  await fireEvent.press(screen.getByRole('button', { name: /^Log 1 Medium latte · / }));
 
   await finishBasket();
   expect(await screen.findByText('Logged Latte')).toBeTruthy();
   await act(async () => jest.requireActual('expo-router').router.push('/log-food'));
   expect(await screen.findByRole('button', { name: 'Log 350 ml of Latte' })).toBeTruthy();
 });
-

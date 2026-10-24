@@ -317,7 +317,9 @@ describe('pack size', () => {
 
 describe('sugar', () => {
   test('sugar per 100 g is read as a secondary nutrient', () => {
-    const draft = parseOffProduct({ product: { product_name: 'Maltesers', nutriments: { 'energy-kcal_100g': 498, sugars_100g: 52 } } })!;
+    const draft = parseOffProduct({
+      product: { product_name: 'Maltesers', nutriments: { 'energy-kcal_100g': 498, sugars_100g: 52 } },
+    })!;
     expect(draft.nutrients.sugarG).toBe(52);
   });
 
@@ -333,4 +335,11 @@ test('the shop comes from Open Food Facts’ stores, or the brand when it’s an
   expect(at('Ashfield Farm').shop).toBe('Aldi');
   expect(at('Corner Butchers', 'Booths, Tesco').shop).toBe('Booths');
   expect(at('Corner Butchers').shop).toBeUndefined();
+});
+
+test('a serving counted in pieces gives the size of one', () => {
+  const draft = parseOffProduct({
+    product: { product_name: 'Hobnobs', serving_size: '2 biscuits (25 g)', nutriments: { 'energy-kcal_100g': 480 } },
+  })!;
+  expect(draft.piece).toEqual({ label: 'biscuit', grams: 12.5 });
 });

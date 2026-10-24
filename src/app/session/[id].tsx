@@ -37,7 +37,12 @@ export default function SessionScreen() {
     };
   }, [db, id, version]);
 
-  if (session === undefined) return <ModalScreen title="Session" onClose={() => router.back()}>{null}</ModalScreen>;
+  if (session === undefined)
+    return (
+      <ModalScreen title="Session" onClose={() => router.back()}>
+        {null}
+      </ModalScreen>
+    );
   if (session === null) {
     return (
       <ModalScreen title="Session" closeLabel="Done" onClose={() => router.back()}>

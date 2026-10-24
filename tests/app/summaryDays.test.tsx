@@ -112,8 +112,8 @@ test('drinks today add up as liquid calories, wherever they were logged', async 
   await logLoggable(mockDb, { kind: 'food', id: cola.id }, 500, new Date(2026, 9, 22, 13), 'drink');
   await openSummary();
   await fireEvent.press(await screen.findByRole('button', { name: 'Drinks today: 2 · 349 kcal' }));
-  expect(await screen.findByText('Lunch · 330 ml')).toBeTruthy();
-  expect(screen.getByText('Drink · 500 ml')).toBeTruthy();
+  expect(await screen.findByText('Lunch · 1 can')).toBeTruthy();
+  expect(screen.getByText('Drink · 2 glasses')).toBeTruthy();
 });
 
 test('the week view lists protein and calories per day against the targets', async () => {

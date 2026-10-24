@@ -107,6 +107,8 @@ export type FoodLogEntry = {
   notes: string | null;
   /** The food's photo (pack, built-in or the owner's), when the diary shows it; not stored on the entry. */
   photo?: string;
+  /** The amount as a count when it is one ("2 biscuits"), for the diary; not stored on the entry. */
+  count?: string;
 };
 
 /** Something the owner can log in one tap. `nutrients` are for `defaultAmount`. */

@@ -202,7 +202,7 @@ test('a per-100 g food with a known scoop size offers servings', async () => {
   await screen.findByRole('header', { name: 'Whey tub' });
   expect(screen.getByText('1 serving = 25 g')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: '2' }));
-  await fireEvent.press(screen.getByRole('button', { name: /^Log 50 g · / }));
+  await fireEvent.press(screen.getByRole('button', { name: /^Log 2 servings · / }));
   await fireEvent.press(await screen.findByRole('button', { name: 'Done scanning' }));
   await finishBasket();
   expect(await screen.findByLabelText('Calories 200 of 2,500. Protein 40 of 145 grams.')).toBeTruthy();
@@ -223,7 +223,7 @@ test('part of a scanned product can be logged, e.g. half a bar', async () => {
   await typeBarcode('5000159461122');
   await screen.findByRole('header', { name: 'Chocolate bar' });
   await fireEvent.press(screen.getByRole('button', { name: '½' }));
-  await fireEvent.press(screen.getByRole('button', { name: /^Log 22\.5 g · / }));
+  await fireEvent.press(screen.getByRole('button', { name: /^Log ½ serving · / }));
   await fireEvent.press(await screen.findByRole('button', { name: 'Done scanning' }));
   await finishBasket();
   expect(await screen.findByLabelText('Calories 117 of 2,500. Protein 2 of 145 grams.')).toBeTruthy();
@@ -301,7 +301,7 @@ describe('scanning a meal', () => {
 
     await scan('5000000000102');
     await screen.findByRole('header', { name: 'Diet cola' });
-    await fireEvent.press(screen.getByRole('button', { name: /^Log 330 ml · / }));
+    await fireEvent.press(screen.getByRole('button', { name: /^Log 1 serving · / }));
     expect(await screen.findByText('Added Diet cola')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Done scanning' }));

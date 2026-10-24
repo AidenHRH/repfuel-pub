@@ -43,7 +43,7 @@ test('asked once how many are in the tub, then logged by the piece', async () =>
 
   expect(await screen.findByText('1 Malteser = 5 g')).toBeTruthy();
   await fireEvent.changeText(screen.getByLabelText('How many'), '4');
-  await fireEvent.press(screen.getByRole('button', { name: /^Log 20 g · / }));
+  await fireEvent.press(screen.getByRole('button', { name: /^Log 4 Maltesers · / }));
 
   const [entry] = await entriesForDay(mockDb, '2026-10-22');
   expect(entry).toMatchObject({ amount: 20, unit: 'g' });
@@ -68,4 +68,33 @@ test('once known, the piece is the first size and By the piece isn’t offered',
   await renderRouter(appDir, { initialUrl: `/food/log?id=${tub.id}` });
   expect(await screen.findByText('1 Malteser = 5 g')).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'By the piece' })).toBeNull();
+});
+
+test('how many comes first: 2 biscuits, logged as 2 biscuits', async () => {
+  const biscuits = await createFood(mockDb, {
+    name: 'Hobnobs',
+    brand: 'McVitie’s',
+    barcode: null,
+    basis: 'per_100g',
+    servingSize: null,
+    servingUnit: null,
+    nutrients: { kcal: 480, proteinG: 6.5, carbsG: 63, fatG: 21, fibreG: 4 },
+    dataSource: 'open_food_facts',
+    notes: null,
+    pieceG: 12.5,
+    pieceLabel: 'biscuit',
+  });
+  await renderRouter(appDir, { initialUrl: `/food/log?id=${biscuits.id}` });
+  expect(await screen.findByText('biscuit')).toBeTruthy();
+  await fireEvent.press(screen.getByRole('button', { name: 'One more' }));
+  expect(screen.getByText('biscuits')).toBeTruthy();
+  await fireEvent.press(screen.getByRole('button', { name: /^Log 2 biscuits · 120 kcal$/ }));
+  const [entry] = await entriesForDay(mockDb, '2026-10-22');
+  expect(entry).toMatchObject({ amount: 25, unit: 'g', count: '2 biscuits' });
+});
+
+test('a sausage is a built-in food counted by the sausage', async () => {
+  await renderRouter(appDir, { initialUrl: '/food/log?preset=pork-sausage' });
+  await fireEvent.changeText(await screen.findByLabelText('How many'), '3');
+  expect(screen.getByRole('button', { name: /^Log 3 sausages · \d+ kcal$/ })).toBeTruthy();
 });
