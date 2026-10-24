@@ -46,7 +46,7 @@ test('Scan barcode opens the camera for the chosen meal', async () => {
   expect(await screen.findByRole('header', { name: 'Scan barcode' })).toBeTruthy();
 });
 
-test('in order: Recent (3 at most), Favourites, Snacks, Drinks, More ways to add', async () => {
+test('in order: Recent at the meal (3 at most), Favourites, Snacks, Drinks, More ways to add', async () => {
   const regulars = await seedRegulars(mockDb);
   const { foods } = regulars;
   await logLoggable(mockDb, { kind: 'recipe', id: regulars.beefDinner.id }, 1, new Date('2026-10-21T18:00:00Z'));
@@ -59,12 +59,13 @@ test('in order: Recent (3 at most), Favourites, Snacks, Drinks, More ways to add
   await openLogFood();
 
   expect(await screen.findByRole('header', { name: 'Drinks' })).toBeTruthy();
-  expect(headers()).toEqual(['Log food', 'Recent', 'Favourites', 'Snacks', 'Drinks', 'More ways to add']);
-  // The three most recent; Pico salad (the fourth) isn't shown, and nor are the tiles logged just now.
+  expect(headers()).toEqual(['Log food', 'Recent at lunch', 'Favourites', 'Snacks', 'Drinks', 'More ways to add']);
+  // Three at most: Pico salad (had at lunch) first at lunchtime, then the newest; sweet potato (the fourth) isn't
+  // shown, and nor are the tiles logged just now.
+  expect(screen.getByRole('button', { name: 'Log 1 portion of Pico salad' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Log 1 portion of Beef & sweet potato' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Log 1 portion of Overnight oats' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Choose amount of sweet-potato' })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Log 1 portion of Pico salad' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Choose amount of sweet-potato' })).toBeNull();
   // A starred food is a Favourites tile.
   expect(screen.getByRole('button', { name: /^Log .* of whey$/ })).toBeTruthy();
 });

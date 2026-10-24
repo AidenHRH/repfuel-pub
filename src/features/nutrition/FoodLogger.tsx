@@ -168,14 +168,14 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
 
   useEffect(() => {
     let cancelled = false;
-    recentItems(db).then(
+    recentItems(db, new Date(), 12, category).then(
       (list) => !cancelled && setRecent(list),
       () => !cancelled && setRecent([]),
     );
     return () => {
       cancelled = true;
     };
-  }, [db]);
+  }, [db, category]);
 
   useEffect(() => {
     let cancelled = false;
@@ -429,7 +429,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
       {mode === 'home' && recentShown.length > 0 ? (
         <View style={{ gap: spacing.sm }}>
           <Text variant="overline" color="text2" accessibilityRole="header" style={{ paddingHorizontal: spacing.xs }}>
-            Recent
+            {`Recent at ${MEAL_LABELS[category].toLowerCase()}`}
           </Text>
           <View
             style={{

@@ -275,7 +275,13 @@ export async function quickPicks(db: Db, now: Date = new Date(), limit = 8): Pro
 const RECENT_DAYS = 30;
 
 /** What was logged in the last 30 days, newest first, once each, at the amount last logged. */
-export async function recentItems(db: Db, now: Date = new Date(), limit = 12): Promise<Loggable[]> {
+/** Recently had foods and meals, newest first; with `meal`, what was had at that meal comes first. */
+export async function recentItems(
+  db: Db,
+  now: Date = new Date(),
+  limit = 12,
+  meal?: MealCategory,
+): Promise<Loggable[]> {
   const since = new Date(now.getTime() - RECENT_DAYS * 86_400_000).toISOString();
   const rows = await db.getAll<{ item_kind: 'food' | 'recipe'; item_id: string }>(
     `SELECT CASE WHEN e.recipe_id IS NOT NULL THEN 'recipe' ELSE 'food' END AS item_kind,
@@ -286,9 +292,9 @@ export async function recentItems(db: Db, now: Date = new Date(), limit = 12): P
      WHERE e.logged_at >= ? AND coalesce(e.recipe_id, e.food_product_id) IS NOT NULL
        AND f.deleted_at IS NULL AND r.deleted_at IS NULL
      GROUP BY item_kind, item_id
-     ORDER BY max(e.logged_at) DESC
+     ORDER BY max(e.meal_category = ?) DESC, max(e.logged_at) DESC
      LIMIT ?`,
-    [since, limit],
+    [since, meal ?? '', limit],
   );
   const items = await Promise.all(rows.map((r) => toLoggable(db, { kind: r.item_kind, id: r.item_id })));
   return items.filter((i): i is Loggable => i !== null);

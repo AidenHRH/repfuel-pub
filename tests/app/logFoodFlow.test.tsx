@@ -45,7 +45,7 @@ test('recently had foods and meals are ready to log again', async () => {
   await logLoggable(mockDb, { kind: 'recipe', id: regulars.beefDinner.id }, 1, new Date('2026-10-21T18:00:00Z'));
   await logLoggable(mockDb, { kind: 'food', id: regulars.foods.sweetPotato.id }, 200, new Date('2026-10-20T18:00:00Z'));
   await openLogFood();
-  expect(screen.getByRole('header', { name: 'Recent' })).toBeTruthy();
+  expect(screen.getByRole('header', { name: /^Recent at / })).toBeTruthy();
   expect(await screen.findByRole('button', { name: 'Log 1 portion of Beef & sweet potato' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Choose amount of sweet-potato' })).toBeTruthy();
 });

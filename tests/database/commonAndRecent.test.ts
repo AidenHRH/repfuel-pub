@@ -40,3 +40,14 @@ test('recently had: what was logged lately, newest first, once each, with the us
   await deleteFood(db, foods.sweetPotato.id);
   expect((await recentItems(db, at('2026-10-22T12:00:00Z'))).map((r) => r.name)).not.toContain('sweet-potato');
 });
+
+test('recent at a meal: what you usually have at that meal comes first', async () => {
+  const db = await migratedDb();
+  const { overnightOats, beefDinner } = await seedRegulars(db);
+  await logLoggable(db, { kind: 'recipe', id: overnightOats.id }, 1, at('2026-10-20T07:00:00Z'), 'breakfast');
+  await logLoggable(db, { kind: 'recipe', id: beefDinner.id }, 1, at('2026-10-21T18:00:00Z'), 'dinner');
+  const names = async (meal: 'breakfast' | 'dinner') =>
+    (await recentItems(db, at('2026-10-22T12:00:00Z'), 12, meal)).map((r) => r.name);
+  expect(await names('breakfast')).toEqual(['Overnight oats', 'Beef & sweet potato']);
+  expect(await names('dinner')).toEqual(['Beef & sweet potato', 'Overnight oats']);
+});
