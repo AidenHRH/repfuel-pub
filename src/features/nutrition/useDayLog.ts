@@ -3,19 +3,28 @@ import { AppState } from 'react-native';
 
 import { useDb } from '@/database/DatabaseProvider';
 import { entriesForDay } from '@/database/repositories/foodLogRepository';
-import { getCurrentTargets } from '@/database/repositories/targetsRepository';
+import { targetsOn } from '@/database/repositories/targetsRepository';
 import { localDayKey } from '@/domain/dates';
 import { sumEntries, type DayTotals } from '@/domain/nutrition';
 import type { FoodLogEntry, NutritionTargets } from '@/domain/types';
 
 import { nutritionEvents } from './events';
 
+const endOf = (day: string) => {
+  const [y, m, d] = day.split('-').map(Number);
+  return new Date(y, m - 1, d, 23, 59, 59);
+};
+
 export type DayLog = { day: string; entries: FoodLogEntry[]; totals: DayTotals; targets: NutritionTargets };
 
-/** Today's entries and totals from the database. Follows the local day across midnight and app resumes. */
-export function useDayLog(): DayLog | 'error' | null {
+/**
+ * A day's entries and totals from the database: `forDay`, or today, following the local day across midnight and app
+ * resumes.
+ */
+export function useDayLog(forDay?: string | null): DayLog | 'error' | null {
   const db = useDb();
-  const [day, setDay] = useState(() => localDayKey(new Date()));
+  const [today, setDay] = useState(() => localDayKey(new Date()));
+  const day = forDay ?? today;
   const [version, setVersion] = useState(0);
   const [log, setLog] = useState<DayLog | 'error' | null>(null);
 
@@ -23,7 +32,7 @@ export function useDayLog(): DayLog | 'error' | null {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([entriesForDay(db, day), getCurrentTargets(db)]).then(
+    Promise.all([entriesForDay(db, day), targetsOn(db, endOf(day))]).then(
       ([entries, targets]) => {
         if (cancelled) return;
         const totals = sumEntries(entries.map((e) => ({ ...e.nutrients, isApproximate: e.isApproximate })));
@@ -52,7 +61,7 @@ export function useDayLog(): DayLog | 'error' | null {
       clearTimeout(timer);
       subscription.remove();
     };
-  }, [day]);
+  }, [today]);
 
   if (log === 'error') return log;
   return log && log.day === day ? log : null;

@@ -1,4 +1,4 @@
-import { localDayKey } from '@/domain/dates';
+import { addDays, dayTitle, weekOf, localDayKey } from '@/domain/dates';
 
 // jest.config.js pins TZ=Europe/London for the whole run.
 test('tests run in Europe/London', () => {
@@ -15,5 +15,26 @@ describe('localDayKey in Europe/London', () => {
     ['winter midnight exactly', '2026-01-15T00:00:00Z', '2026-01-15'],
   ])('%s', (_label, iso, expected) => {
     expect(localDayKey(new Date(iso))).toBe(expected);
+  });
+});
+
+describe('days for Summary', () => {
+  test('addDays crosses months and the clocks going back', () => {
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
+    expect(addDays('2026-10-25', -1)).toBe('2026-10-24');
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+  });
+
+  test('weekOf runs Monday to Sunday', () => {
+    expect(weekOf('2026-10-22')).toEqual([
+      '2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25',
+    ]);
+    expect(weekOf('2026-10-25')[0]).toBe('2026-10-19');
+  });
+
+  test('dayTitle says Today, Yesterday, else the date', () => {
+    expect(dayTitle('2026-10-22', '2026-10-22')).toBe('Today');
+    expect(dayTitle('2026-10-21', '2026-10-22')).toBe('Yesterday');
+    expect(dayTitle('2026-10-19', '2026-10-22')).toBe('Mon 19 Oct');
   });
 });

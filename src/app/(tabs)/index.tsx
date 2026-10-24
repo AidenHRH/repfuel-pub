@@ -1,36 +1,37 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
-import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { EmptyState } from '@/components/EmptyState';
-import { NutritionIcon, PlusIcon, WorkoutsIcon } from '@/components/icons';
+import { NutritionIcon, PlusIcon } from '@/components/icons';
 import { MacroSummary } from '@/components/MacroSummary';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Snackbar } from '@/components/Snackbar';
-import { Text } from '@/components/Text';
 import { useDb } from '@/database/DatabaseProvider';
+import { setSkipped } from '@/database/repositories/dayRepository';
 import { deleteEntry, restoreEntry } from '@/database/repositories/foodLogRepository';
-import { localDayKey, localTimeLabel } from '@/domain/dates';
-import { amountLabel, kcalLabel } from '@/domain/format';
-import { groupByMeal } from '@/domain/meals';
+import { addDays, localDayKey, weekOf } from '@/domain/dates';
+import { streak, type DayStage } from '@/domain/dayStatus';
 import { lineForDay } from '@/domain/motivation';
-import { roundForDisplay, type DayTotals } from '@/domain/nutrition';
-import type { FoodLogEntry } from '@/domain/types';
+import type { FoodLogEntry, MealCategory } from '@/domain/types';
 import { nutritionEvents } from '@/features/nutrition/events';
-import { safely } from '@/features/safely';
+import { PlannedNow } from '@/features/nutrition/PlannedNow';
 import { useDayLog } from '@/features/nutrition/useDayLog';
-import { TodayReminder } from '@/features/reminders/TodayReminder';
+import { safely } from '@/features/safely';
+import { DailyHabits } from '@/features/summary/DailyHabits';
+import { DayBar } from '@/features/summary/DayBar';
+import { DrinksChip } from '@/features/summary/DrinksChip';
+import { LogAgainSheet } from '@/features/summary/LogAgainSheet';
+import { MealList } from '@/features/summary/MealList';
+import { useDaySummaries } from '@/features/summary/useDaySummaries';
+import { TourTarget } from '@/features/tour/TourTarget';
 import { useSetting } from '@/features/useSetting';
 import { workoutEvents } from '@/features/workouts/events';
-import { PlannedNow } from '@/features/nutrition/PlannedNow';
-import { ThisWeek } from '@/features/workouts/ThisWeek';
 import { useTheme } from '@/theme/ThemeProvider';
-import { fonts, radii, spacing } from '@/theme/tokens';
-import { TourTarget } from '@/features/tour/TourTarget';
+import { spacing } from '@/theme/tokens';
 
 type SnackState =
   | { kind: 'logged'; key: string; entryId: string; name: string }
@@ -39,12 +40,31 @@ type SnackState =
 
 const FLOATING = { height: 52, paddingHorizontal: spacing.xl, boxShadow: '0px 10px 28px rgba(0,0,0,0.28)' };
 
+/** The picker's reach: this week and the four before it. */
+const WEEKS = 5;
+
+/** The hour after which today's breakfast, lunch or dinner can be marked skipped. */
+const MEAL_OVER: Partial<Record<MealCategory, number>> = { breakfast: 11, lunch: 15, dinner: 21 };
+
 export default function TodayScreen() {
   const db = useDb();
   const router = useRouter();
   const { colors } = useTheme();
-  const log = useDayLog();
+  const [picked, setPicked] = useState<string | null>(null);
+  const log = useDayLog(picked);
+  const today = localDayKey(new Date());
+  const day = picked ?? today;
+  const isToday = day === today;
   const [snack, setSnack] = useState<SnackState | null>(null);
+  const [again, setAgain] = useState<FoodLogEntry | null>(null);
+  const weeks = Array.from({ length: WEEKS }, (_, i) => weekOf(addDays(today, -7 * (WEEKS - 1 - i))));
+  const summaries = useDaySummaries(weeks.flat());
+  const summaryWeeks = summaries ? weeks.map((w, i) => summaries.slice(i * 7, i * 7 + 7)) : [];
+  const stages: Record<string, DayStage> = {};
+  for (const s of summaries ?? []) stages[s.day] = s.status.stage;
+  const skipped = summaries?.find((s) => s.day === day)?.skipped ?? [];
+  const now = new Date();
+  const canSkip = (Object.keys(MEAL_OVER) as MealCategory[]).filter((m) => !isToday || now.getHours() >= MEAL_OVER[m]!);
   const [showMotivation] = useSetting('showMotivation', true);
 
   useEffect(
@@ -92,18 +112,33 @@ export default function TodayScreen() {
     nutritionEvents.emit({ type: 'deleted', entry });
   };
 
-  const dateLabel = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const toggleSkipped = async (meal: MealCategory, on: boolean) => {
+    await safely('mark that meal', () => setSkipped(db, day, meal, on));
+    nutritionEvents.emit({ type: 'changed' });
+  };
+
+  const logFood = (meal?: MealCategory) => {
+    const query = [meal ? `meal=${meal}` : null, isToday ? null : `day=${day}`].filter(Boolean).join('&');
+    router.push(query ? `/log-food?${query}` : '/log-food');
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <Screen
         title="Summary"
-        overline={dateLabel}
-        subtitle={showMotivation ? lineForDay(localDayKey(new Date())) : undefined}
+        subtitle={showMotivation && isToday ? lineForDay(today) : undefined}
         bottomInset={72}>
+        <DayBar
+          day={day}
+          today={today}
+          weeks={summaryWeeks}
+          streak={streak(stages, today)}
+          onPick={(d) => setPicked(d === today ? null : d)}
+        />
+
         <TourTarget id="summary-rings">
           {log === 'error' ? (
-            <EmptyState title="Couldn’t load today’s food" message="Your data is safe. Close and reopen RepFuel to try again." />
+            <EmptyState title="Couldn’t load that day’s food" message="Your data is safe. Close and reopen RepFuel to try again." />
           ) : log ? (
             <MacroSummary totals={log.totals} targets={log.targets} />
           ) : (
@@ -111,53 +146,46 @@ export default function TodayScreen() {
           )}
         </TourTarget>
 
-        <TodayReminder />
+        {log && log !== 'error' ? <DrinksChip entries={log.entries} isToday={isToday} /> : null}
 
-        <View style={{ gap: spacing.sm }}>
-          <SectionHeader title="Food today" action={{ label: 'Add', onPress: () => router.push('/search-food') }} />
-          <PlannedNow />
-          {log && log !== 'error' && log.entries.length === 0 ? (
-            <EmptyState
-              icon={<NutritionIcon color={colors.accent} />}
-              title="Nothing logged yet today"
-              message="Tap Log food: your meals, snacks and search are all there, one tap each."
-            />
-          ) : null}
-          {log && log !== 'error'
-            ? groupByMeal(log.entries).map((section) => (
-                <View key={section.category} style={{ gap: spacing.sm, marginTop: spacing.xs }}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'baseline',
-                      justifyContent: 'space-between',
-                      paddingHorizontal: spacing.xs,
-                    }}>
-                    <Text variant="overline" color="text2" accessibilityRole="header">
-                      {section.label}
-                    </Text>
-                    <Text variant="caption" color="text2" numeric>
-                      {sectionTotals(section.totals)}
-                    </Text>
-                  </View>
-                  <View style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
-                    {section.entries.map((entry, i) => (
-                      <EntryRow
-                        key={entry.id}
-                        entry={entry}
-                        first={i === 0}
-                        onEdit={() => router.push(`/entry/${entry.id}`)}
-                        onDelete={() => void removeEntry(entry)}
-                      />
-                    ))}
-                  </View>
-                </View>
-              ))
-            : null}
-        </View>
+        {isToday ? <PlannedNow /> : null}
 
-        <ThisWeek />
+        {log && log !== 'error' && log.entries.length === 0 ? (
+          <EmptyState
+            icon={<NutritionIcon color={colors.accent} />}
+            title={isToday ? 'Nothing logged yet today' : 'Nothing logged this day'}
+            message={
+              isToday
+                ? 'Tap + Log on a meal, or Log food: your meals, snacks and search are all there.'
+                : 'Forgot something? Tap + Log on a meal to add it to this day.'
+            }
+          />
+        ) : null}
+
+        {log && log !== 'error' ? (
+          <SectionHeader
+            title="Meals"
+            action={isToday ? { label: 'Search', onPress: () => router.push('/search-food') } : undefined}
+          />
+        ) : null}
+
+        {log && log !== 'error' ? (
+          <MealList
+            entries={log.entries}
+            skipped={skipped}
+            canSkip={canSkip}
+            onLog={logFood}
+            onToggleSkipped={(meal, on) => void toggleSkipped(meal, on)}
+            onEdit={(entry) => router.push(`/entry/${entry.id}`)}
+            onDelete={(entry) => void removeEntry(entry)}
+            onLogAgain={setAgain}
+          />
+        ) : null}
+
+        <DailyHabits day={day} isToday={isToday} />
       </Screen>
+
+      <LogAgainSheet entry={again} onClose={() => setAgain(null)} />
 
       {snack ? (
         <Snackbar
@@ -198,159 +226,18 @@ export default function TodayScreen() {
           }
         />
       ) : (
-        <View
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: spacing.lg,
-            flexDirection: 'row',
-            justifyContent: 'center',
-            gap: spacing.sm,
-          }}>
-          <TourTarget id="log-food-pill">
-            <Button
-              label="Log food"
-              onPress={() => router.push('/log-food')}
-              style={FLOATING}
-              icon={<PlusIcon color={colors.onAccent} size={20} />}
-            />
-          </TourTarget>
-          <TourTarget id="log-workout-pill">
-            <Button
-              label="Log workout"
-              onPress={() => router.push('/lift/new?from=today')}
-              style={FLOATING}
-              icon={<WorkoutsIcon color={colors.onAccent} size={20} />}
-            />
-          </TourTarget>
-        </View>
+        <TourTarget
+          id="log-food-pill"
+          style={{ position: 'absolute', alignSelf: 'center', bottom: spacing.lg }}>
+          <Button
+            label="Log food"
+            onPress={() => logFood()}
+            style={FLOATING}
+            icon={<PlusIcon color={colors.onAccent} size={20} />}
+          />
+        </TourTarget>
       )}
     </View>
   );
 }
 
-/** "452 kcal · 38 g"; ≈ when any entry is an estimate. */
-function sectionTotals({ totals, approximate }: DayTotals): string {
-  return `${approximate ? '≈ ' : ''}${roundForDisplay(totals.kcal, 'kcal')} kcal · ${roundForDisplay(totals.proteinG, 'g')} g`;
-}
-
-function EntryRow({
-  entry,
-  first,
-  onEdit,
-  onDelete,
-}: {
-  entry: FoodLogEntry;
-  first: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const { colors } = useTheme();
-  const swipeable = useRef<SwipeableMethods>(null);
-  const portion =
-    entry.amount === 1 && (entry.unit === 'portion' || entry.unit === 'serving')
-      ? ''
-      : ` · ${amountLabel(entry.amount, entry.unit)}`;
-  const kcal = kcalLabel(entry.nutrients, entry.isApproximate);
-  const act = (action: () => void) => () => {
-    swipeable.current?.close();
-    action();
-  };
-  return (
-    <View style={{ borderTopWidth: first ? 0 : 1, borderTopColor: colors.sep }}>
-      <ReanimatedSwipeable
-        ref={swipeable}
-        friction={1.6}
-        rightThreshold={48}
-        overshootRight={false}
-        renderRightActions={() => (
-          <View style={{ flexDirection: 'row' }}>
-            <SwipeAction
-              label="Edit"
-              accessibilityLabel={`Edit ${entry.name}`}
-              background={colors.well}
-              color={colors.accent}
-              onPress={act(onEdit)}
-            />
-            <SwipeAction
-              label="Delete"
-              accessibilityLabel={`Delete ${entry.name}`}
-              background={colors.danger}
-              color="#FFFFFF"
-              onPress={act(onDelete)}
-            />
-          </View>
-        )}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${entry.name}, ${localTimeLabel(entry.loggedAt)}${portion}, ${kcal}, ${roundForDisplay(entry.nutrients.proteinG, 'g')} grams protein`}
-          accessibilityHint="Opens to adjust. Swipe left to edit or delete."
-          accessibilityActions={[{ name: 'activate' }, { name: 'edit', label: 'Edit' }, { name: 'delete', label: 'Delete' }]}
-          onAccessibilityAction={(e) => {
-            if (e.nativeEvent.actionName === 'delete') onDelete();
-            else onEdit();
-          }}
-          onPress={onEdit}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: spacing.md,
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md + 2,
-            // Opaque, so the swipe actions stay hidden underneath until the row slides.
-            backgroundColor: pressed ? colors.well : colors.card,
-          })}>
-          <View style={{ flex: 1, gap: 3 }}>
-            <Text style={{ fontFamily: fonts.medium }} numberOfLines={1}>
-              {entry.name}
-            </Text>
-            <Text variant="caption" color="text2" numeric>
-              {`${localTimeLabel(entry.loggedAt)}${portion}`}
-            </Text>
-          </View>
-          <View style={{ alignItems: 'flex-end', gap: 3 }}>
-            <Text variant="callout" numeric style={{ fontFamily: fonts.semibold }}>
-              {kcal}
-            </Text>
-            <Text variant="caption" color="pro" numeric style={{ fontFamily: fonts.semibold }}>
-              {`${roundForDisplay(entry.nutrients.proteinG, 'g')} g`}
-            </Text>
-          </View>
-        </Pressable>
-      </ReanimatedSwipeable>
-    </View>
-  );
-}
-
-function SwipeAction({
-  label,
-  accessibilityLabel,
-  background,
-  color,
-  onPress,
-}: {
-  label: string;
-  accessibilityLabel: string;
-  background: string;
-  color: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        width: 78,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: background,
-        opacity: pressed ? 0.8 : 1,
-      })}>
-      <Text variant="callout" style={{ color, fontFamily: fonts.semibold }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}

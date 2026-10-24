@@ -2,7 +2,7 @@ import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-librar
 import path from 'path';
 
 import type { Db } from '@/database/Db';
-import { logLoggable } from '@/database/repositories/foodLogRepository';
+import { entriesForDay, logLoggable } from '@/database/repositories/foodLogRepository';
 import { createFood } from '@/database/repositories/foodRepository';
 
 import { migratedDb, seedRegulars } from '../helpers/seed';
@@ -36,7 +36,8 @@ test('choose the meal first; everything logged from here goes to it', async () =
 
   await screen.findByRole('header', { name: 'Summary' });
   expect(await screen.findByRole('header', { name: 'Snacks' })).toBeTruthy();
-  expect(screen.queryByRole('header', { name: 'Lunch' })).toBeNull();
+  const [entry] = await entriesForDay(mockDb, '2026-10-22');
+  expect(entry.mealCategory).toBe('snack');
 });
 
 test('recently had foods and meals are ready to log again', async () => {

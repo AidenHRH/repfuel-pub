@@ -137,7 +137,7 @@ test('a food row can be deleted (with Undo) or edited from its swipe actions', a
   await act(async () => jest.advanceTimersByTime(5000));
 
   const row = await screen.findByRole('button', { name: /^Overnight oats, 08:30/ });
-  expect(row.props.accessibilityActions.map((a: { name: string }) => a.name)).toEqual(['activate', 'edit', 'delete']);
+  expect(row.props.accessibilityActions.map((a: { name: string }) => a.name)).toEqual(['activate', 'edit', 'delete', 'longpress']);
   await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
   expect(await screen.findByText('Deleted Overnight oats')).toBeTruthy();
   expect(await screen.findByLabelText(ring('0', '0'))).toBeTruthy();
@@ -157,20 +157,18 @@ test('swiping a row shows Edit and Delete buttons', async () => {
 });
 
 describe('Summary', () => {
-  test('This week shows recent training, classes with their effort', async () => {
+  test('Daily habits lists the day’s sessions, each opening to its detail', async () => {
     await logClass(mockDb, {
       classTypeId: 'class_hyrox',
-      at: new Date('2026-10-20T17:30:00Z'),
+      at: new Date('2026-10-21T06:30:00Z'),
       durationMin: 60,
       effort: 9,
       notes: null,
     });
     await openToday();
-    expect(await screen.findByRole('header', { name: 'This week' })).toBeTruthy();
-    expect(await screen.findByText('Hyrox')).toBeTruthy();
-    expect(screen.getByText('9/10')).toBeTruthy();
-    await fireEvent.press(screen.getByRole('button', { name: 'See all training' }));
-    expect(await screen.findByRole('header', { name: 'Workouts' })).toBeTruthy();
+    expect(await screen.findByRole('header', { name: 'Daily habits' })).toBeTruthy();
+    await fireEvent.press(await screen.findByRole('button', { name: /^07:30 · Hyrox, 60 min, effort 9/ }));
+    expect(await screen.findByRole('header', { name: 'Edit class' })).toBeTruthy();
   });
 
   test('the meal planned for now can be logged in one tap', async () => {

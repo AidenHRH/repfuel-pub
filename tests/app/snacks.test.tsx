@@ -130,9 +130,9 @@ test('search for a snack, and keep it as a tile for next time', async () => {
   expect(await screen.findByRole('button', { name: 'Log 350 ml of Latte' })).toBeTruthy();
 });
 
-test('Add next to Food opens the search, ready to type', async () => {
+test('Search next to Meals opens the search, ready to type', async () => {
   await openToday();
-  await fireEvent.press(await screen.findByRole('button', { name: 'Add' }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Search' }));
   expect(await screen.findByRole('header', { name: 'Search food' })).toBeTruthy();
   expect(screen.getByLabelText('Search foods and meals').props.autoFocus).toBe(true);
 });
