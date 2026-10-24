@@ -1,7 +1,7 @@
 import { CameraView, useCameraPermissions, type BarcodeType } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { ActivityIndicator, AppState, Linking, Pressable, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
@@ -14,6 +14,7 @@ import { TextField } from '@/components/TextField';
 import { useDb } from '@/database/DatabaseProvider';
 import { saveProductFood } from '@/database/repositories/barcodeRepository';
 import { recordUse } from '@/database/repositories/tourRepository';
+import { basket } from '@/features/nutrition/basket';
 import { pickIngredient } from '@/features/nutrition/ingredientPick';
 import { safely } from '@/features/safely';
 import { barcodeFromJpegBase64, choosePictureSize } from '@/services/barcodeFromPhoto';
@@ -21,7 +22,8 @@ import { lookupBarcode, type BarcodeOutcome } from '@/services/barcodeLookup';
 import type { FoodDraft } from '@/services/food-provider/types';
 import { getFoodProvider } from '@/services/foodProvider';
 import { useTheme } from '@/theme/ThemeProvider';
-import { radii, spacing } from '@/theme/tokens';
+import { fonts, radii, spacing } from '@/theme/tokens';
+import { MEAL_LABELS } from '@/domain/meals';
 
 type Problem = Extract<BarcodeOutcome, { kind: 'not_found' | 'error' | 'invalid' }>;
 
@@ -67,7 +69,6 @@ export default function ScanScreen() {
   // built, which gets the food back.
   const { meal, for: purpose } = useLocalSearchParams<{ meal?: string; for?: string }>();
   const forIngredient = purpose === 'ingredient';
-  const forMeal = forIngredient ? { for: 'ingredient' } : meal ? { meal } : {};
   const { colors } = useTheme();
   const [permission, requestPermission, getPermission] = useCameraPermissions();
   // The camera scans live by itself; a photo read by RepFuel's own reader is the fallback.
@@ -90,9 +91,26 @@ export default function ScanScreen() {
   const [problem, setProblem] = useState<Problem | null>(null);
   // The camera reports the same code many times a second; only the first one counts.
   const busy = useRef(false);
+  // Scanning a meal from Log food: each pack opens its amount, then comes back here for the next one.
+  const [many] = useState(() => basket.isOpen() && !forIngredient);
+  const forMeal = forIngredient ? { for: 'ingredient' } : { ...(meal ? { meal } : {}), ...(many ? { next: 'scan' } : {}) };
+  const go = many ? router.push : router.replace;
+  const [added, setAdded] = useState(() => basket.items().length);
+  const [startCount] = useState(() => basket.items().length);
+  useEffect(() => basket.subscribe(() => setAdded(basket.items().length)), []);
+  // The same pack still in view when coming back isn't scanned again straight away.
+  const lastCode = useRef<{ code: string; at: number } | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      busy.current = false;
+      setLooking(null);
+    }, []),
+  );
 
   const handleCode = async (raw: string) => {
     if (busy.current) return;
+    const recent = lastCode.current;
+    if (many && recent && recent.code === raw.trim() && Date.now() - recent.at < 4000) return;
     busy.current = true;
     setProblem(null);
     setLooking(raw.trim());
@@ -116,8 +134,10 @@ export default function ScanScreen() {
       router.back();
       return;
     }
+    // Opened: the same pack still in view on coming back isn't looked up again for a moment.
+    if (outcome.kind === 'saved' || outcome.kind === 'draft') lastCode.current = { code: raw.trim(), at: Date.now() };
     if (outcome.kind === 'saved') {
-      router.replace({
+      go({
         pathname: '/food/log',
         params: { id: outcome.food.id, ...forMeal },
       });
@@ -125,7 +145,7 @@ export default function ScanScreen() {
     }
     if (outcome.kind === 'draft') {
       // Calories and protein known: straight to how much. Otherwise check the product against the label first.
-      router.replace({
+      go({
         pathname: isComplete(outcome.draft) ? '/food/log' : '/food/new',
         params: {
           barcode: outcome.barcode,
@@ -181,7 +201,23 @@ export default function ScanScreen() {
   const problemBarcode = problem && problem.kind !== 'invalid' ? problem.barcode : null;
 
   return (
-    <ModalScreen title="Scan barcode" closeLabel="Close" onClose={() => router.back()}>
+    <ModalScreen
+      title="Scan barcode"
+      closeLabel="Close"
+      onClose={() => router.back()}
+      footer={
+        many && added > startCount ? (
+          <Button label="Done" accessibilityLabel="Done scanning" onPress={() => router.back()} />
+        ) : undefined
+      }>
+      {many && added > startCount ? (
+        <Card accessibilityRole="alert" style={{ gap: 2, paddingVertical: spacing.md }}>
+          <Text style={{ fontFamily: fonts.semibold }}>{`Added ${basket.items()[added - 1]?.name ?? ''}`}</Text>
+          <Text variant="caption" color="text2">
+            {`${added} in your ${MEAL_LABELS[basket.meal() ?? 'lunch'].toLowerCase()} · scan the next one, or tap Done`}
+          </Text>
+        </Card>
+      ) : null}
       {permission?.granted ? (
         <View
           style={{

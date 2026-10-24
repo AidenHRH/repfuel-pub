@@ -64,7 +64,15 @@ const isMeal = (v: string | undefined): v is MealCategory => !!v && (CATEGORIES 
  * per-serving foods; g/ml for per-100 foods, with shortcuts for their measures (a serving, a cup, a large egg).
  */
 export default function LogFoodAmountScreen() {
-  const params = useLocalSearchParams<{ id?: string; draft?: string; barcode?: string; preset?: string; meal?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    draft?: string;
+    barcode?: string;
+    preset?: string;
+    meal?: string;
+    /** `scan`: opened from the scanner while scanning a meal; goes back to it for the next pack. */
+    next?: string;
+  }>();
   const db = useDb();
   const router = useRouter();
   const draft = useMemo(() => parseDraft(params.draft), [params.draft]);
@@ -169,7 +177,9 @@ export default function LogFoodAmountScreen() {
       if (!saved || keepTile || favourite) nutritionEvents.emit({ type: 'changed' });
       return logAndAnnounce(db, { kind: 'food', id: target.id }, amount, category);
     });
-    if (entry) finishAdd(router);
+    if (!entry) return;
+    if (params.next === 'scan') router.back();
+    else finishAdd(router);
   };
 
   const starred = favourite ?? saved?.isFavourite ?? false;

@@ -51,6 +51,8 @@ export default function NewFoodScreen() {
     meal?: string;
     /** `ingredient`: checking a scanned product for a meal being built, which gets it back once saved. */
     for?: string;
+    /** `scan`: opened from the scanner while scanning a meal; goes back to it for the next pack. */
+    next?: string;
   }>();
   const forIngredient = params.for === 'ingredient';
   const mealCategory = isMeal(params.meal) ? params.meal : undefined;
@@ -107,11 +109,12 @@ export default function NewFoodScreen() {
       // Per-100 foods need an amount before they can be logged.
       router.replace({
         pathname: '/food/log',
-        params: { id: saved.id, ...(mealCategory ? { meal: mealCategory } : {}) },
+        params: { id: saved.id, ...(mealCategory ? { meal: mealCategory } : {}), ...(params.next ? { next: params.next } : {}) },
       });
       return;
     }
-    finishAdd(router);
+    if (params.next === 'scan') router.back();
+    else finishAdd(router);
     if (andLog) {
       const item = meal ? ({ kind: 'recipe', id: meal.id } as const) : ({ kind: 'food', id: saved.id } as const);
       await safely(`log ${saved.name}`, () => logAndAnnounce(db, item, 1, mealCategory));

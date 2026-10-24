@@ -100,6 +100,7 @@ test('scan a product with calories and protein, pick an amount and log it; it is
   await fireEvent.changeText(screen.getByLabelText('Amount'), '30');
   await fireEvent.press(screen.getByRole('button', { name: /^Log 30 g · / }));
 
+  await fireEvent.press(await screen.findByRole('button', { name: 'Done scanning' }));
   await finishBasket();
   expect(await screen.findByLabelText('Calories 120 of 2,500. Protein 23 of 145 grams.')).toBeTruthy();
   expect((await listFoods(mockDb, { search: 'whey' }))[0]).toMatchObject({
@@ -124,6 +125,7 @@ test('a barcode you already saved goes straight to logging, without a lookup', a
   await screen.findByRole('header', { name: 'My shake' });
   expect(mockLookup).not.toHaveBeenCalled();
   await fireEvent.press(screen.getByRole('button', { name: /^Log 1 serving · / }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Done scanning' }));
   await finishBasket();
   expect(await screen.findByLabelText('Calories 120 of 2,500. Protein 24 of 145 grams.')).toBeTruthy();
 });
@@ -201,6 +203,7 @@ test('a per-100 g food with a known scoop size offers servings', async () => {
   expect(screen.getByText('1 serving = 25 g')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: '2' }));
   await fireEvent.press(screen.getByRole('button', { name: /^Log 50 g · / }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Done scanning' }));
   await finishBasket();
   expect(await screen.findByLabelText('Calories 200 of 2,500. Protein 40 of 145 grams.')).toBeTruthy();
 });
@@ -221,6 +224,7 @@ test('part of a scanned product can be logged, e.g. half a bar', async () => {
   await screen.findByRole('header', { name: 'Chocolate bar' });
   await fireEvent.press(screen.getByRole('button', { name: '½' }));
   await fireEvent.press(screen.getByRole('button', { name: /^Log 22\.5 g · / }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Done scanning' }));
   await finishBasket();
   expect(await screen.findByLabelText('Calories 117 of 2,500. Protein 2 of 145 grams.')).toBeTruthy();
 });
@@ -256,4 +260,66 @@ test('scanning starts by itself; the photo and typing are small fallbacks, and t
   expect(mockCamera.torch).toBe(true);
   await fireEvent.press(screen.getByRole('button', { name: 'Type the number' }));
   expect(screen.getByLabelText('Barcode number')).toBeTruthy();
+});
+
+describe('scanning a meal', () => {
+  const sandwich = {
+    name: 'Chicken club sandwich',
+    brand: 'Tesco',
+    basis: 'per_serving' as const,
+    servingSize: null,
+    nutrients: { kcal: 450, proteinG: 28, carbsG: 40, fatG: 18, fibreG: 3 },
+    missing: [],
+  };
+  const can = {
+    name: 'Diet cola',
+    brand: null,
+    basis: 'per_100ml' as const,
+    servingSize: 330,
+    nutrients: { kcal: 1, proteinG: 0, carbsG: 0, fatG: 0, fibreG: 0 },
+    missing: [],
+  };
+
+  async function scan(code: string) {
+    await act(async () => {
+      mockCamera.onBarcodeScanned?.({ type: 'ean13', data: code });
+    });
+  }
+
+  test('scan the sandwich, then the can: each opens its amount and comes back for the next', async () => {
+    mockResults.push({ status: 'found', draft: sandwich }, { status: 'found', draft: can });
+    await renderRouter(appDir, { initialUrl: '/' });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Log food' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Scan barcode' }));
+    await screen.findByRole('header', { name: 'Scan barcode' });
+
+    await scan('5000000000101');
+    await screen.findByRole('header', { name: 'Chicken club sandwich' });
+    await fireEvent.press(screen.getByRole('button', { name: /^Log 1 serving · / }));
+    expect(await screen.findByText('Added Chicken club sandwich')).toBeTruthy();
+    expect(screen.getByText('1 in your breakfast · scan the next one, or tap Done')).toBeTruthy();
+
+    await scan('5000000000102');
+    await screen.findByRole('header', { name: 'Diet cola' });
+    await fireEvent.press(screen.getByRole('button', { name: /^Log 330 ml · / }));
+    expect(await screen.findByText('Added Diet cola')).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Done scanning' }));
+    expect(await screen.findByRole('header', { name: 'Your breakfast · 2 items' })).toBeTruthy();
+  });
+
+  test('no signal mid-meal says so and keeps scanning; what was added stays', async () => {
+    mockResults.push({ status: 'found', draft: sandwich }, { status: 'error', reason: 'offline' });
+    await renderRouter(appDir, { initialUrl: '/' });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Log food' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Scan barcode' }));
+    await screen.findByRole('header', { name: 'Scan barcode' });
+    await scan('5000000000101');
+    await screen.findByRole('header', { name: 'Chicken club sandwich' });
+    await fireEvent.press(screen.getByRole('button', { name: /^Log 1 serving · / }));
+    await scan('5000000000102');
+    expect(await screen.findByText('No internet connection')).toBeTruthy();
+    expect(screen.getByText('Added Chicken club sandwich')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Done scanning' })).toBeTruthy();
+  });
 });
