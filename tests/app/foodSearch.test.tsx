@@ -5,6 +5,7 @@ import type { Db } from '@/database/Db';
 import { listFoods } from '@/database/repositories/foodRepository';
 import type { FoodDraft, FoodProvider, SearchResult } from '@/services/food-provider/types';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
 let mockDb: Db;
@@ -77,7 +78,7 @@ test('search for a KitKat, pick how much, file it under Snacks', async () => {
   await fireEvent.press(screen.getByRole('button', { name: 'Snack' }));
   await fireEvent.press(screen.getByRole('button', { name: /^Log 20\.75 g · / }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 107 of 2,500. Protein 1 of 145 grams.')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Snacks' })).toBeTruthy();
   const saved = (await listFoods(mockDb, { search: 'kitkat' }))[0];
@@ -152,7 +153,7 @@ test('a shop product can be logged straight from the results with +', async () =
   await searchFor('kitkat');
   expect(await screen.findByText('215 kcal · 2.7 P · 24.9 C · 11.2 F')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Log 1 serving of KitKat 4 Finger' }));
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged KitKat 4 Finger')).toBeTruthy();
 });
 
@@ -173,7 +174,7 @@ test('the product page: big numbers, favourite star, and a Log button with calor
   expect(screen.getByLabelText('Calories 215')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Favourite' }));
   await fireEvent.press(screen.getByRole('button', { name: 'Log 41.5 g · 215 kcal' }));
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   const saved = (await listFoods(mockDb, { search: 'kitkat' }))[0];
   expect(saved.isFavourite).toBe(true);
 });

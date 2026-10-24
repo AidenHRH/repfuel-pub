@@ -6,7 +6,14 @@ import { logTimeFor } from '@/domain/dayStatus';
 import { mealCategoryFor } from '@/domain/meals';
 import type { FoodLogEntry, MealCategory } from '@/domain/types';
 
-type NutritionEvent = { type: 'changed' } | { type: 'logged'; entry: FoodLogEntry } | { type: 'deleted'; entry: FoodLogEntry };
+import { basket } from './basket';
+
+type NutritionEvent =
+  | { type: 'changed' }
+  | { type: 'logged'; entry: FoodLogEntry }
+  /** A meal of several items finished from the basket: Summary offers Undo for all of them. */
+  | { type: 'loggedMany'; entries: FoodLogEntry[] }
+  | { type: 'deleted'; entry: FoodLogEntry };
 type Listener = (event: NutritionEvent) => void;
 
 const listeners = new Set<Listener>();
@@ -55,6 +62,14 @@ export async function logAndAnnounce(
 export function announce(entry: FoodLogEntry): FoodLogEntry {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
   nutritionEvents.emit({ type: 'changed' });
-  nutritionEvents.emit({ type: 'logged', entry });
+  // Inside Log food the entry goes into the basket; Log N items announces the meal.
+  if (basket.isOpen()) basket.add(entry);
+  else nutritionEvents.emit({ type: 'logged', entry });
   return entry;
+}
+
+/** Finishes the basket's meal: Summary shows "Logged 2 items" with Undo for all. */
+export function announceBasket(entries: FoodLogEntry[]): void {
+  if (entries.length === 1) nutritionEvents.emit({ type: 'logged', entry: entries[0] });
+  else if (entries.length > 1) nutritionEvents.emit({ type: 'loggedMany', entries });
 }

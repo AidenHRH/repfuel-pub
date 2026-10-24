@@ -4,6 +4,7 @@ import path from 'path';
 import type { Db } from '@/database/Db';
 import { quickAdd } from '@/database/repositories/snackRepository';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
 let mockDb: Db;
@@ -41,7 +42,7 @@ test('one tap on a tile logs it under Snacks, whatever the time', async () => {
   await openLogFood();
   await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Protein bar' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged Protein bar')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Snacks' })).toBeTruthy();
 });
@@ -108,7 +109,7 @@ test('hold a tile to log half of it', async () => {
   }
   await fireEvent.press(screen.getByRole('button', { name: 'Log ½ serving' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged Chocolate bar')).toBeTruthy();
   expect(screen.getByText('≈ 120 kcal · 2 g')).toBeTruthy();
 });
@@ -124,7 +125,7 @@ test('search for a snack, and keep it as a tile for next time', async () => {
   await fireEvent(screen.getByLabelText('Add to Snacks'), 'valueChange', true);
   await fireEvent.press(screen.getByRole('button', { name: /^Log 350 ml · / }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged Latte')).toBeTruthy();
   await act(async () => jest.requireActual('expo-router').router.push('/log-food'));
   expect(await screen.findByRole('button', { name: 'Log 350 ml of Latte' })).toBeTruthy();

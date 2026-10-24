@@ -6,6 +6,7 @@ import type { Db } from '@/database/Db';
 import { createFood, listFoods } from '@/database/repositories/foodRepository';
 import type { FoodProvider, LookupResult } from '@/services/food-provider/types';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb } from '../helpers/seed';
 
 let mockDb: Db;
@@ -99,6 +100,7 @@ test('scan a product with calories and protein, pick an amount and log it; it is
   await fireEvent.changeText(screen.getByLabelText('Amount'), '30');
   await fireEvent.press(screen.getByRole('button', { name: /^Log 30 g · / }));
 
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 120 of 2,500. Protein 23 of 145 grams.')).toBeTruthy();
   expect((await listFoods(mockDb, { search: 'whey' }))[0]).toMatchObject({
     barcode: '5056000000017',
@@ -122,6 +124,7 @@ test('a barcode you already saved goes straight to logging, without a lookup', a
   await screen.findByRole('header', { name: 'My shake' });
   expect(mockLookup).not.toHaveBeenCalled();
   await fireEvent.press(screen.getByRole('button', { name: /^Log 1 serving · / }));
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 120 of 2,500. Protein 24 of 145 grams.')).toBeTruthy();
 });
 
@@ -198,6 +201,7 @@ test('a per-100 g food with a known scoop size offers servings', async () => {
   expect(screen.getByText('1 serving = 25 g')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: '2' }));
   await fireEvent.press(screen.getByRole('button', { name: /^Log 50 g · / }));
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 200 of 2,500. Protein 40 of 145 grams.')).toBeTruthy();
 });
 
@@ -217,6 +221,7 @@ test('part of a scanned product can be logged, e.g. half a bar', async () => {
   await screen.findByRole('header', { name: 'Chocolate bar' });
   await fireEvent.press(screen.getByRole('button', { name: '½' }));
   await fireEvent.press(screen.getByRole('button', { name: /^Log 22\.5 g · / }));
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 117 of 2,500. Protein 2 of 145 grams.')).toBeTruthy();
 });
 

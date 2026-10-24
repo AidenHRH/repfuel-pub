@@ -35,6 +35,7 @@ import { spacing } from '@/theme/tokens';
 
 type SnackState =
   | { kind: 'logged'; key: string; entryId: string; name: string }
+  | { kind: 'loggedMany'; key: string; entries: FoodLogEntry[] }
   | { kind: 'deleted'; key: string; entry: FoodLogEntry }
   | { kind: 'lift'; key: string; message: string };
 
@@ -73,6 +74,8 @@ export default function TodayScreen() {
         if (event.type === 'deleted') setSnack({ kind: 'deleted', key: `d-${event.entry.id}`, entry: event.entry });
         if (event.type === 'logged')
           setSnack({ kind: 'logged', key: event.entry.id, entryId: event.entry.id, name: event.entry.name });
+        if (event.type === 'loggedMany')
+          setSnack({ kind: 'loggedMany', key: event.entries.map((e) => e.id).join(','), entries: event.entries });
       }),
     [],
   );
@@ -96,6 +99,7 @@ export default function TodayScreen() {
     setSnack(null);
     await safely('undo that', async () => {
       if (snack.kind === 'logged') await deleteEntry(db, snack.entryId);
+      else if (snack.kind === 'loggedMany') for (const e of snack.entries) await deleteEntry(db, e.id);
       else await restoreEntry(db, snack.entry);
     });
     nutritionEvents.emit({ type: 'changed' });
@@ -124,10 +128,7 @@ export default function TodayScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <Screen
-        title="Summary"
-        subtitle={showMotivation && isToday ? lineForDay(today) : undefined}
-        bottomInset={72}>
+      <Screen title="Summary" subtitle={showMotivation && isToday ? lineForDay(today) : undefined} bottomInset={72}>
         <DayBar
           day={day}
           today={today}
@@ -138,7 +139,10 @@ export default function TodayScreen() {
 
         <TourTarget id="summary-rings">
           {log === 'error' ? (
-            <EmptyState title="Couldn’t load that day’s food" message="Your data is safe. Close and reopen RepFuel to try again." />
+            <EmptyState
+              title="Couldn’t load that day’s food"
+              message="Your data is safe. Close and reopen RepFuel to try again."
+            />
           ) : log ? (
             <MacroSummary totals={log.totals} targets={log.targets} />
           ) : (
@@ -193,9 +197,11 @@ export default function TodayScreen() {
           message={
             snack.kind === 'logged'
               ? `Logged ${snack.name}`
-              : snack.kind === 'deleted'
-                ? `Deleted ${snack.entry.name}`
-                : snack.message
+              : snack.kind === 'loggedMany'
+                ? `Logged ${snack.entries.length} items`
+                : snack.kind === 'deleted'
+                  ? `Deleted ${snack.entry.name}`
+                  : snack.message
           }
           onTimeout={() => setSnack((current) => (current?.key === snack.key ? null : current))}
           actions={
@@ -226,9 +232,7 @@ export default function TodayScreen() {
           }
         />
       ) : (
-        <TourTarget
-          id="log-food-pill"
-          style={{ position: 'absolute', alignSelf: 'center', bottom: spacing.lg }}>
+        <TourTarget id="log-food-pill" style={{ position: 'absolute', alignSelf: 'center', bottom: spacing.lg }}>
           <Button
             label="Log food"
             onPress={() => logFood()}
@@ -240,4 +244,3 @@ export default function TodayScreen() {
     </View>
   );
 }
-

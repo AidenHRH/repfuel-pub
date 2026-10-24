@@ -7,6 +7,7 @@ import { entriesForDay, logLoggable } from '@/database/repositories/foodLogRepos
 import { createFood } from '@/database/repositories/foodRepository';
 import type { FoodProduct } from '@/domain/types';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb } from '../helpers/seed';
 
 let mockDb: Db;
@@ -68,6 +69,7 @@ test('a dot opens that day; Log adds to that day, not today', async () => {
   await fireEvent.changeText(screen.getByLabelText('Search foods and meals'), 'big');
   await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Big plate' }));
 
+  await finishBasket();
   expect(await screen.findByRole('button', { name: /^Big plate, 18:30/ })).toBeTruthy();
   expect(await entriesForDay(mockDb, '2026-10-20')).toHaveLength(2);
   const dinner = (await entriesForDay(mockDb, '2026-10-20')).find((e) => e.mealCategory === 'dinner')!;

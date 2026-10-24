@@ -11,7 +11,7 @@ export function mealCategoryFor(date: Date): MealCategory {
   if (h < 11) return 'breakfast';
   if (h < 15) return 'lunch';
   if (h < 17) return 'snack';
-  if (h < 21) return 'dinner';
+  if (h < 22) return 'dinner';
   return 'snack';
 }
 

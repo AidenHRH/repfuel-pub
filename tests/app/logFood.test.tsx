@@ -4,6 +4,7 @@ import path from 'path';
 import type { Db } from '@/database/Db';
 import { listRecipes } from '@/database/repositories/recipeRepository';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
 let mockDb: Db;
@@ -35,7 +36,7 @@ test('a quick meal is saved once, logged, and ready to log again in one tap', as
   await fireEvent.changeText(screen.getByLabelText('Protein'), '40');
   await fireEvent.press(screen.getByRole('button', { name: 'Save and log' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 650 of 2,500. Protein 40 of 145 grams.')).toBeTruthy();
   expect(screen.getByText('≈ 650')).toBeTruthy();
   // Saved to My meals by default, so it logs again in one tap as a meal.
@@ -53,8 +54,9 @@ test('a quick meal saved as a meal is listed once when searching', async () => {
   await fireEvent.changeText(screen.getByLabelText('Protein'), '40');
   await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
-  await fireEvent.press(screen.getByRole('button', { name: 'Log food' }));
+  // Saved without logging: back on Log food, nothing in the basket.
+  await screen.findByRole('header', { name: 'Log food' });
+  expect(screen.queryByRole('button', { name: /^Log \d+ items?$/ })).toBeNull();
   await fireEvent.press(await screen.findByRole('button', { name: 'Search food' }));
   await fireEvent.changeText(await screen.findByLabelText('Search foods and meals'), 'katsu');
   expect(await screen.findByRole('button', { name: 'Log 1 portion of Gousto katsu' })).toBeTruthy();
@@ -71,7 +73,7 @@ test('a quick meal can skip My meals', async () => {
   await fireEvent(screen.getByLabelText('Save to My meals'), 'valueChange', false);
   await fireEvent.press(screen.getByRole('button', { name: 'Save and log' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged Office cake')).toBeTruthy();
   expect(await listRecipes(mockDb, { search: 'Office cake' })).toEqual([]);
 });
@@ -94,7 +96,7 @@ test('search finds saved meals and + logs them', async () => {
   expect(screen.queryByText('Overnight oats')).toBeNull();
   await fireEvent.press(screen.getByRole('button', { name: 'Log 1 portion of Beef & sweet potato' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 451 of 2,500. Protein 37 of 145 grams.')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Dinner' })).toBeTruthy();
   expect(screen.getByText('18:30')).toBeTruthy();
@@ -108,6 +110,7 @@ test('a per-100 g food asks how much before logging', async () => {
   await fireEvent.changeText(await screen.findByLabelText('Amount'), '200');
   await fireEvent.press(screen.getByRole('button', { name: /^Log 200 g · / }));
 
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 172 of 2,500. Protein 3 of 145 grams.')).toBeTruthy();
 });
 
@@ -118,7 +121,7 @@ test('Search food opens its own screen, ready to type, and logging closes back t
   expect(screen.getByLabelText('Search foods and meals').props.autoFocus).toBe(true);
   await fireEvent.changeText(screen.getByLabelText('Search foods and meals'), 'beef');
   await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 portion of Beef & sweet potato' }));
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged Beef & sweet potato')).toBeTruthy();
 });
 
@@ -128,6 +131,6 @@ test('Saved meals lists your meals, starred first, one tap each', async () => {
   await screen.findByRole('header', { name: 'Saved meals' });
   expect(screen.queryByLabelText('Search foods and meals')).toBeNull();
   await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 portion of Overnight oats' }));
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged Overnight oats')).toBeTruthy();
 });

@@ -33,6 +33,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, radii, spacing } from '@/theme/tokens';
 
 import { AmountPicker, useAmount } from './AmountPicker';
+import { finishAdd } from './basket';
 import { logAndAnnounce, nutritionEvents } from './events';
 import { onIngredientPicked } from './ingredientPick';
 
@@ -192,7 +193,7 @@ export function RecipeEditor({ recipeId, now = false, meal }: { recipeId?: strin
       if (!keep) await deleteRecipe(db, recipe.id);
       return logged;
     });
-    if (entry) router.dismissAll();
+    if (entry) finishAdd(router);
   };
 
   const save = async () => {

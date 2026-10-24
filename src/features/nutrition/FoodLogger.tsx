@@ -1,16 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { FoodThumb } from '@/components/FoodThumb';
-import { photoFor } from '@/data/foodPhotos';
 import { BarcodeIcon, ChevronIcon, PlusIcon, SearchIcon } from '@/components/icons';
 import { ModalScreen } from '@/components/ModalScreen';
 import { Segmented } from '@/components/Segmented';
 import { Text } from '@/components/Text';
+import { photoFor } from '@/data/foodPhotos';
 import { useDb } from '@/database/DatabaseProvider';
-import { recentItems, toLoggable } from '@/database/repositories/foodLogRepository';
+import { deleteEntry, recentItems, toLoggable } from '@/database/repositories/foodLogRepository';
 import { saveProductFood } from '@/database/repositories/barcodeRepository';
 import { setInDrinksRow, setInSnacksRow } from '@/database/repositories/snackRepository';
 import { listFoods } from '@/database/repositories/foodRepository';
@@ -21,8 +21,10 @@ import { MEAL_CATEGORIES, MEAL_LABELS, mealCategoryFor } from '@/domain/meals';
 import { roundForDisplay } from '@/domain/nutrition';
 import { rankHits } from '@/domain/searchRank';
 import type { NutriScore } from '@/domain/health';
-import type { FoodProduct, Loggable, MealCategory } from '@/domain/types';
-import { logAndAnnounce, enterLoggingDay } from '@/features/nutrition/events';
+import type { FoodLogEntry, FoodProduct, Loggable, MealCategory } from '@/domain/types';
+import { basket, finishAdd } from '@/features/nutrition/basket';
+import { BasketCard, useBasket } from '@/features/nutrition/BasketCard';
+import { announceBasket, logAndAnnounce, enterLoggingDay, nutritionEvents } from '@/features/nutrition/events';
 import { NutriScoreBadge } from '@/features/nutrition/HealthCard';
 import { TileRow } from '@/features/nutrition/TileRow';
 import { useDrinkItems, useFavouriteItems, useSnackItems } from '@/features/nutrition/useQuickPicks';
@@ -126,6 +128,43 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
   const [category, setCategory] = useState<MealCategory>(() => (isMeal(params.meal) ? params.meal : mealCategoryFor(new Date())));
   // Snack tiles go under Snacks unless a meal was picked on purpose (here or by the screen that opened this).
   const [mealPicked, setMealPicked] = useState(isMeal(params.meal));
+  // Log food (home) holds the basket for the meal: everything added in this flow, until Log N items.
+  useEffect(() => {
+    if (mode !== 'home') return;
+    basket.open(category);
+    return () => {
+      const added = basket.items();
+      basket.close();
+      announceBasket(added);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- opened once per visit, with the meal it opened on
+  }, [mode]);
+  const inBasket = useBasket(forDay);
+  const closeLogFood = () => {
+    if (mode !== 'home' || inBasket.length === 0) return router.back();
+    const n = inBasket.length === 1 ? '1 item' : `${inBasket.length} items`;
+    Alert.alert(`Keep ${n}?`, 'They’re already in your diary.', [
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          const added = basket.items();
+          added.forEach((e) => basket.remove(e.id));
+          await safely('remove them', async () => {
+            for (const e of added) await deleteEntry(db, e.id);
+          });
+          nutritionEvents.emit({ type: 'changed' });
+          router.back();
+        },
+      },
+      { text: 'Keep', onPress: () => router.back() },
+    ]);
+  };
+  const removeFromBasket = async (entry: FoodLogEntry) => {
+    basket.remove(entry.id);
+    await safely(`remove ${entry.name}`, () => deleteEntry(db, entry.id));
+    nutritionEvents.emit({ type: 'changed' });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -187,7 +226,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
 
   const log = async (item: { kind: 'food' | 'recipe'; id: string; name: string }, amount: number) => {
     const entry = await safely(`log ${item.name}`, () => logAndAnnounce(db, item, amount, category));
-    if (entry) router.dismissAll();
+    if (entry && mode !== 'home') finishAdd(router);
   };
 
   const query = search.trim();
@@ -232,7 +271,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
       const food = await saveProductFood(db, { barcode: hit.barcode, draft: hit.draft });
       return logAndAnnounce(db, { kind: 'food', id: food.id }, hit.draft.servingSize!, category);
     });
-    if (entry) router.dismissAll();
+    if (entry) finishAdd(router);
   };
 
   const shownOnline = online && online.query === query ? online : null;
@@ -254,7 +293,34 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
       : void log(item, item.defaultAmount);
 
   return (
-    <ModalScreen title={TITLES[mode]} onClose={() => router.back()}>
+    <ModalScreen
+      title={TITLES[mode]}
+      onClose={closeLogFood}
+      footer={
+        mode === 'home' && inBasket.length > 0 ? (
+          <View style={{ gap: spacing.sm }}>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <Button
+                variant="secondary"
+                label="+ Add a drink"
+                onPress={() => router.push({ pathname: '/scan', params: { meal: category, ...dayParam } })}
+                style={{ flex: 1 }}
+              />
+              <Button
+                variant="secondary"
+                label="+ Add a snack"
+                onPress={() => router.push({ pathname: '/search-food', params: { meal: 'snack', ...dayParam } })}
+                style={{ flex: 1 }}
+              />
+            </View>
+            <Button
+              label={`Log ${inBasket.length === 1 ? '1 item' : `${inBasket.length} items`}`}
+              haptic
+              onPress={() => router.dismissAll()}
+            />
+          </View>
+        ) : undefined
+      }>
       <TourTarget id="log-food-meal">
         <Segmented
           accessibilityLabel="Meal"
@@ -262,6 +328,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
           onChange={(c) => {
             setCategory(c);
             setMealPicked(true);
+            if (mode === 'home') basket.setMeal(c);
           }}
           options={CATEGORIES.map((c) => ({ value: c, label: MEAL_LABELS[c] }))}
         />
@@ -316,6 +383,16 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
           </Pressable>
         </View>
       )}
+
+      {mode === 'home' ? (
+        <BasketCard
+          entries={inBasket}
+          meal={category}
+          day={forDay}
+          onRemove={(e) => void removeFromBasket(e)}
+          onOpen={(e) => router.push(`/entry/${e.id}`)}
+        />
+      ) : null}
 
       {mode === 'home' ? (
         <>
@@ -383,20 +460,20 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
 
       {mode === 'home' ? (
         <>
-          <TileRow title="Favourites" items={favouriteTiles} category={category} onLogged={() => router.dismissAll()} />
+          <TileRow title="Favourites" items={favouriteTiles} category={category} onLogged={() => undefined} />
           {/* Snack and drink tiles go under Snacks and Drinks unless a meal was picked on purpose. */}
           <TileRow
             title="Snacks"
             items={snackTiles}
             category={mealPicked ? category : 'snack'}
-            onLogged={() => router.dismissAll()}
+            onLogged={() => undefined}
             removal={{ label: 'Remove from Snacks', run: (id) => setInSnacksRow(db, id, false) }}
           />
           <TileRow
             title="Drinks"
             items={drinkTiles}
             category={mealPicked ? category : 'drink'}
-            onLogged={() => router.dismissAll()}
+            onLogged={() => undefined}
             removal={{ label: 'Remove from Drinks', run: (id) => setInDrinksRow(db, id, false) }}
           />
           <View style={{ gap: spacing.sm }}>

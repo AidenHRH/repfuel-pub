@@ -6,6 +6,7 @@ import { entriesForDay, logLoggable } from '@/database/repositories/foodLogRepos
 import { setFoodFavourite } from '@/database/repositories/foodRepository';
 import { quickAdd } from '@/database/repositories/snackRepository';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
 let mockDb: Db;
@@ -80,7 +81,7 @@ test('a drink tile logs under Drinks, whatever the time', async () => {
   await openLogFood();
   await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Iced latte' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByRole('header', { name: 'Drinks' })).toBeTruthy();
   expect((await entriesForDay(mockDb, '2026-10-22'))[0]).toMatchObject({ mealCategory: 'drink' });
 });

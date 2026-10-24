@@ -5,6 +5,7 @@ import type { Db } from '@/database/Db';
 import { entriesForDay } from '@/database/repositories/foodLogRepository';
 import type { FoodDraft, FoodProvider, LookupResult } from '@/services/food-provider/types';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
 let mockDb: Db;
@@ -127,7 +128,7 @@ test('tuna pasta: scan each packet, half the pasta bag and a can of tuna, makes 
   expect(screen.getByLabelText('Save to My meals').props.value).toBe(true);
   await fireEvent.press(screen.getByRole('button', { name: 'Log' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByText('Logged Tuna pasta')).toBeTruthy();
   const [entry] = await entriesForDay(mockDb, '2026-10-22');
   // (250 g × 3.59 + 145 g × 1.09) / 3

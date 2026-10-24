@@ -5,6 +5,7 @@ import type { Db } from '@/database/Db';
 import { entriesForDay, logLoggable } from '@/database/repositories/foodLogRepository';
 import { createFood } from '@/database/repositories/foodRepository';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
 let mockDb: Db;
@@ -34,7 +35,7 @@ test('choose the meal first; everything logged from here goes to it', async () =
   await fireEvent.changeText(screen.getByLabelText('Search foods and meals'), 'oats');
   await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 portion of Overnight oats' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByRole('header', { name: 'Snacks' })).toBeTruthy();
   const [entry] = await entriesForDay(mockDb, '2026-10-22');
   expect(entry.mealCategory).toBe('snack');
@@ -63,7 +64,7 @@ test('a cup of blueberries: common foods come with household measures', async ()
   await fireEvent.press(screen.getByRole('button', { name: '1 cup · 148 g' }));
   await fireEvent.press(screen.getByRole('button', { name: /^Log 148 g · / }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
   expect(await screen.findByLabelText('Calories 84 of 2,500. Protein 1 of 145 grams.')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Breakfast' })).toBeTruthy();
 });

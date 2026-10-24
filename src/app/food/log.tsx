@@ -29,6 +29,7 @@ import { calculateLogged, roundForDisplay } from '@/domain/nutrition';
 import type { FoodProduct, MealCategory } from '@/domain/types';
 import { logAndAnnounce, nutritionEvents } from '@/features/nutrition/events';
 import { AmountPicker, useAmount } from '@/features/nutrition/AmountPicker';
+import { finishAdd } from '@/features/nutrition/basket';
 import { HealthCard } from '@/features/nutrition/HealthCard';
 import { PieceSheet } from '@/features/nutrition/PieceSheet';
 import { ShopPicker } from '@/features/nutrition/ShopPicker';
@@ -168,7 +169,7 @@ export default function LogFoodAmountScreen() {
       if (!saved || keepTile || favourite) nutritionEvents.emit({ type: 'changed' });
       return logAndAnnounce(db, { kind: 'food', id: target.id }, amount, category);
     });
-    if (entry) router.dismissAll();
+    if (entry) finishAdd(router);
   };
 
   const starred = favourite ?? saved?.isFavourite ?? false;

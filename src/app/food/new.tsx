@@ -20,6 +20,7 @@ import {
   validateFoodForm,
   type FoodFormErrors,
 } from '@/features/nutrition/foodForm';
+import { finishAdd } from '@/features/nutrition/basket';
 import { FoodFormView } from '@/features/nutrition/FoodFormView';
 import { pickIngredient } from '@/features/nutrition/ingredientPick';
 import { ShopPicker } from '@/features/nutrition/ShopPicker';
@@ -110,7 +111,7 @@ export default function NewFoodScreen() {
       });
       return;
     }
-    router.dismissAll();
+    finishAdd(router);
     if (andLog) {
       const item = meal ? ({ kind: 'recipe', id: meal.id } as const) : ({ kind: 'food', id: saved.id } as const);
       await safely(`log ${saved.name}`, () => logAndAnnounce(db, item, 1, mealCategory));

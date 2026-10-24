@@ -7,6 +7,7 @@ import { setRecipeFavourite } from '@/database/repositories/recipeRepository';
 import { logClass } from '@/database/repositories/classRepository';
 import { getPlan, makePlan, planDayKeys } from '@/database/repositories/mealPlanRepository';
 
+import { finishBasket } from '../helpers/basket';
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
 let mockDb: Db;
@@ -25,7 +26,7 @@ async function logFromLogFood(label: string) {
   await screen.findByRole('header', { name: 'Log food' });
   await fireEvent.press(await screen.findByRole('button', { name: 'Saved meals' }));
   await fireEvent.press(await screen.findByRole('button', { name: label }));
-  await screen.findByRole('header', { name: 'Summary' });
+  await finishBasket();
 }
 
 const ring = (kcal: string, protein: string) => `Calories ${kcal} of 2,500. Protein ${protein} of 145 grams.`;
@@ -117,6 +118,7 @@ test('an approximate meal marks the totals with ≈', async () => {
   // A starred food is a Favourites tile on Log food.
   await fireEvent.press(screen.getByRole('button', { name: 'Log food' }));
   await fireEvent.press(await screen.findByRole('button', { name: `Log 1 serving of ${katsu.name}` }));
+  await finishBasket();
   expect(await screen.findByText('≈ 650')).toBeTruthy();
   expect(screen.getByText(/includes your estimates/)).toBeTruthy();
 });
