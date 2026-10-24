@@ -43,3 +43,15 @@ export function dayTitle(day: string, today: string): string {
 
 /** One letter per weekday, Monday first, for the week's dots. */
 export const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** "You had this Tuesday" for something last had in the past week; null when longer ago. */
+export function hadLabel(lastIso: string, now: Date = new Date()): string | null {
+  const today = localDayKey(now);
+  const day = localDayKey(new Date(lastIso));
+  if (day === today) return 'You had this today';
+  if (day === addDays(today, -1)) return 'You had this yesterday';
+  if (day < addDays(today, -6)) return null;
+  return `You had this ${WEEKDAY_NAMES[new Date(lastIso).getDay()]}`;
+}

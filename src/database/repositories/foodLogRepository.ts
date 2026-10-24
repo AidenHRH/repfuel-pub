@@ -341,3 +341,13 @@ export async function toLoggable(db: Db, item: { kind: 'food' | 'recipe'; id: st
     isFavourite: food.isFavourite,
   };
 }
+
+/** When each food ("food:<id>") and meal ("recipe:<id>") was last logged, for "You had this Tuesday". */
+export async function lastHad(db: Db): Promise<Map<string, string>> {
+  const rows = await db.getAll<{ key: string; at: string }>(
+    `SELECT CASE WHEN recipe_id IS NOT NULL THEN 'recipe:' || recipe_id ELSE 'food:' || food_product_id END AS key,
+            max(logged_at) AS at
+     FROM food_log_entry WHERE coalesce(recipe_id, food_product_id) IS NOT NULL GROUP BY key`,
+  );
+  return new Map(rows.map((r) => [r.key, r.at]));
+}

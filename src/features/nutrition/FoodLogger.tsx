@@ -10,12 +10,13 @@ import { Segmented } from '@/components/Segmented';
 import { Text } from '@/components/Text';
 import { photoFor } from '@/data/foodPhotos';
 import { useDb } from '@/database/DatabaseProvider';
-import { deleteEntry, recentItems, toLoggable } from '@/database/repositories/foodLogRepository';
+import { deleteEntry, lastHad, recentItems, toLoggable } from '@/database/repositories/foodLogRepository';
 import { saveProductFood } from '@/database/repositories/barcodeRepository';
 import { setInDrinksRow, setInSnacksRow } from '@/database/repositories/snackRepository';
 import { listFoods } from '@/database/repositories/foodRepository';
 import { foodsShownAsMeals, listRecipes } from '@/database/repositories/recipeRepository';
 import { measureLabel, searchCommonFoods, type CommonFood } from '@/domain/commonFoods';
+import { hadLabel } from '@/domain/dates';
 import { amountLabel, friendlyNumber, kcalLabel, proteinLabel } from '@/domain/format';
 import { MEAL_CATEGORIES, MEAL_LABELS, mealCategoryFor } from '@/domain/meals';
 import { roundForDisplay } from '@/domain/nutrition';
@@ -90,7 +91,9 @@ function hitDetail({ draft }: SearchHit): string {
 function hitSubtitle({ draft }: SearchHit): string {
   const unit = draft.basis === 'per_100ml' ? 'ml' : 'g';
   const size = draft.servingSize ? `${friendlyNumber(draft.servingSize)} ${unit}` : `per 100 ${unit}`;
-  return draft.brand ? `${draft.brand} · ${size}` : size;
+  // The shop tells apart the same food from different shops (Aldi's chicken thighs, Lidl's).
+  const shop = draft.shop && draft.shop !== draft.brand ? draft.shop : null;
+  return [draft.brand, shop, size].filter(Boolean).join(' · ');
 }
 
 /** "215 kcal · 2.7 P · 24.9 C · 11.2 F" for one serving (or 100 g); unknowns show as –. */
@@ -181,12 +184,19 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
     let cancelled = false;
     (async () => {
       try {
-        const [recipes, allFoods, asMeals] = await Promise.all([
+        const [recipes, allFoods, asMeals, had] = await Promise.all([
           listRecipes(db, { search }),
           // Without a search, saved meals and starred foods are listed here; other foods turn up under Recently had or a search.
           search.trim() ? listFoods(db, { search }) : listFoods(db, {}).then((all) => all.filter((f) => f.isFavourite)),
           foodsShownAsMeals(db),
+          search.trim() ? lastHad(db) : Promise.resolve(new Map<string, string>()),
         ]);
+        // Searching: your own foods say when you last had them.
+        const withHad = (key: string, text: string) => {
+          const at = had.get(key);
+          const label = at ? hadLabel(at) : null;
+          return label ? `${text} · ${label}` : text;
+        };
         // A quick meal saved as a meal is listed once, as the meal.
         const foods = allFoods.filter((f) => !asMeals.has(f.id));
         const recipeItems = await Promise.all(
@@ -197,7 +207,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
               name: r.name,
               loggable,
               food: null,
-              detail: loggable ? detail(loggable) : 'Meal',
+              detail: withHad(`recipe:${r.id}`, loggable ? detail(loggable) : 'Meal'),
             };
           }),
         );
@@ -210,7 +220,12 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
               name: f.name,
               loggable,
               food: f,
-              detail: loggable ? detail(loggable) : `${kcalLabel(f.nutrients, f.dataSource === 'user_approximate')} · ${per}`,
+              detail: withHad(
+                `food:${f.id}`,
+                [f.shop, loggable ? detail(loggable) : `${kcalLabel(f.nutrients, f.dataSource === 'user_approximate')} · ${per}`]
+                  .filter(Boolean)
+                  .join(' · '),
+              ),
             };
           }),
         );
@@ -724,7 +739,7 @@ function Row({
         <Text style={{ fontFamily: fonts.medium }} numberOfLines={2}>
           {name}
         </Text>
-        <Text variant="caption" color="text2" numeric numberOfLines={1}>
+        <Text variant="caption" color="text2" numeric numberOfLines={2}>
           {subtitle}
         </Text>
       </View>

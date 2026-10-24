@@ -1,4 +1,4 @@
-import { addDays, dayTitle, weekOf, localDayKey } from '@/domain/dates';
+import { addDays, dayTitle, hadLabel, weekOf, localDayKey } from '@/domain/dates';
 
 // jest.config.js pins TZ=Europe/London for the whole run.
 test('tests run in Europe/London', () => {
@@ -36,5 +36,16 @@ describe('days for Summary', () => {
     expect(dayTitle('2026-10-22', '2026-10-22')).toBe('Today');
     expect(dayTitle('2026-10-21', '2026-10-22')).toBe('Yesterday');
     expect(dayTitle('2026-10-19', '2026-10-22')).toBe('Mon 19 Oct');
+  });
+});
+
+describe('hadLabel', () => {
+  const now = new Date(2026, 9, 22, 12);
+  test('today, yesterday, then the weekday within the week; nothing older', () => {
+    expect(hadLabel(new Date(2026, 9, 22, 8).toISOString(), now)).toBe('You had this today');
+    expect(hadLabel(new Date(2026, 9, 21, 19).toISOString(), now)).toBe('You had this yesterday');
+    expect(hadLabel(new Date(2026, 9, 20, 13).toISOString(), now)).toBe('You had this Tuesday');
+    expect(hadLabel(new Date(2026, 9, 16, 13).toISOString(), now)).toBe('You had this Friday');
+    expect(hadLabel(new Date(2026, 9, 15, 13).toISOString(), now)).toBeNull();
   });
 });
