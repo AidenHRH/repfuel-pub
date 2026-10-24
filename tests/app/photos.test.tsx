@@ -51,7 +51,9 @@ test('Summary shows each item’s photo: the pack’s, a built-in food’s, else
 
   const sandwich = await screen.findByLabelText('Meal deal sandwich picture');
   expect(sandwich.props.source).toEqual([{ uri: 'https://images.openfoodfacts.org/sandwich.jpg' }]);
-  expect(screen.getByLabelText('Banana picture').props.source[0].uri).toMatch(/themealdb\.com\/images\/ingredients\/Banana-Small\.png$/);
+  expect(screen.getByLabelText('Banana picture').props.source[0].uri).toMatch(
+    /themealdb\.com\/images\/ingredients\/Banana-Small\.png$/,
+  );
   expect(screen.queryByLabelText('Mum’s flapjack picture')).toBeNull();
   expect(screen.getAllByTestId('food-letter', { includeHiddenElements: true }).length).toBeGreaterThan(0);
 });

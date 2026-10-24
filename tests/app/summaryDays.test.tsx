@@ -37,7 +37,11 @@ beforeEach(async () => {
   plate = await food('Big plate', 'per_serving', 830, 50);
   cola = await food('Cola', 'per_100ml', 42, 0);
   // Wednesday: breakfast, lunch and dinner, 2,490 kcal and 150 g protein against 2,500 and 145: goals hit.
-  for (const [hour, meal] of [[8, 'breakfast'], [12, 'lunch'], [18, 'dinner']] as const)
+  for (const [hour, meal] of [
+    [8, 'breakfast'],
+    [12, 'lunch'],
+    [18, 'dinner'],
+  ] as const)
     await logLoggable(mockDb, { kind: 'food', id: plate.id }, 1, new Date(2026, 9, 21, hour), meal);
   // Tuesday: lunch only.
   await logLoggable(mockDb, { kind: 'food', id: plate.id }, 1, new Date(2026, 9, 20, 12), 'lunch');
@@ -116,7 +120,5 @@ test('the week view lists protein and calories per day against the targets', asy
   await openSummary();
   await fireEvent.press(await screen.findByRole('button', { name: 'Week view' }));
   expect(await screen.findByText('1 of 4 days on target')).toBeTruthy();
-  expect(
-    screen.getByRole('button', { name: 'Yesterday: protein 150 of 145 grams, 2,490 of 2,500 calories' }),
-  ).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Yesterday: protein 150 of 145 grams, 2,490 of 2,500 calories' })).toBeTruthy();
 });

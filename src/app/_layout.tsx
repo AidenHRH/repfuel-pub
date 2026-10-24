@@ -163,6 +163,13 @@ export default function RootLayout() {
                       }}
                     />
                     <Stack.Screen
+                      name="takeaway"
+                      options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                      }}
+                    />
+                    <Stack.Screen
                       name="search-food"
                       options={{
                         presentation: 'modal',

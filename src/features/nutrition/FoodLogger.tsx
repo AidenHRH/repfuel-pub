@@ -432,6 +432,12 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
               style={{ flex: 1 }}
             />
           </View>
+          <Button
+            variant="secondary"
+            label="Takeaway"
+            accessibilityLabel="Takeaway estimates"
+            onPress={() => router.push({ pathname: '/takeaway', params: { meal: category } })}
+          />
         </>
       ) : null}
 

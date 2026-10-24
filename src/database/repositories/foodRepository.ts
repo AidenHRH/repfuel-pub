@@ -1,3 +1,4 @@
+import type { TakeawayDish, TakeawaySize } from '@/data/takeaways';
 import { normaliseBarcode } from '@/domain/barcode';
 import type { CommonFood } from '@/domain/commonFoods';
 import type { HealthInfo, Nova, NutriScore } from '@/domain/health';
@@ -255,4 +256,27 @@ export async function setPieceSize(db: Db, id: string, grams: number, label: str
   if (!Number.isFinite(grams) || grams <= 0) throw new RangeError('A piece must weigh more than 0');
   await db.run('UPDATE food_product SET piece_g = ?, piece_label = ?, updated_at = ? WHERE id = ?', [grams, label.trim() || 'piece', nowIso(), id]);
   return (await getFood(db, id))!;
+}
+
+/** A takeaway dish at a size, as a saved food (an estimate, per serving), reused when had again. */
+export async function saveTakeawayFood(db: Db, dish: TakeawayDish, size: TakeawaySize): Promise<FoodProduct> {
+  const presetId = `takeaway:${dish.id}:${size.label.toLowerCase().replace(/\s+/g, '-')}`;
+  const row = await db.getFirst<{ id: string }>(
+    'SELECT id FROM food_product WHERE preset_id = ? AND deleted_at IS NULL LIMIT 1',
+    [presetId],
+  );
+  if (row) return (await getFood(db, row.id))!;
+  const portion = size.label === '1 slice' ? 'a slice' : size.label.toLowerCase();
+  return createFood(db, {
+    name: `${dish.name} (takeaway, ${portion})`,
+    brand: null,
+    barcode: null,
+    basis: 'per_serving',
+    servingSize: null,
+    servingUnit: null,
+    nutrients: { kcal: size.kcal, proteinG: size.proteinG, carbsG: size.carbsG, fatG: size.fatG, fibreG: null },
+    dataSource: 'user_approximate',
+    notes: `${dish.cuisine} takeaway: an estimate from typical UK portions`,
+    presetId,
+  });
 }

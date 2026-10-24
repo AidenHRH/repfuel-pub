@@ -139,7 +139,12 @@ test('a food row can be deleted (with Undo) or edited from its swipe actions', a
   await act(async () => jest.advanceTimersByTime(5000));
 
   const row = await screen.findByRole('button', { name: /^Overnight oats, 08:30/ });
-  expect(row.props.accessibilityActions.map((a: { name: string }) => a.name)).toEqual(['activate', 'edit', 'delete', 'longpress']);
+  expect(row.props.accessibilityActions.map((a: { name: string }) => a.name)).toEqual([
+    'activate',
+    'edit',
+    'delete',
+    'longpress',
+  ]);
   await fireEvent(row, 'accessibilityAction', { nativeEvent: { actionName: 'delete' } });
   expect(await screen.findByText('Deleted Overnight oats')).toBeTruthy();
   expect(await screen.findByLabelText(ring('0', '0'))).toBeTruthy();

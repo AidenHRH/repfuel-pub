@@ -17,7 +17,14 @@ beforeEach(async () => {
   jest.useFakeTimers({ now: new Date('2026-10-22T11:30:00Z'), advanceTimers: true }); // 12:30 London, lunchtime
   mockDb = await migratedDb();
   const earlier = new Date('2026-10-01T09:00:00Z');
-  await quickAdd(mockDb, { name: 'Meal deal sandwich', kcal: 420, proteinG: 24, mealCategory: 'snack', keepAsTile: true, at: earlier });
+  await quickAdd(mockDb, {
+    name: 'Meal deal sandwich',
+    kcal: 420,
+    proteinG: 24,
+    mealCategory: 'snack',
+    keepAsTile: true,
+    at: earlier,
+  });
   await quickAdd(mockDb, { name: 'Coke can', kcal: 139, proteinG: 0, mealCategory: 'drink', keepAsTile: true, at: earlier });
   await mockDb.run('DELETE FROM food_log_entry');
 });
