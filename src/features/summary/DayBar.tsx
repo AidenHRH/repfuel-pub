@@ -164,6 +164,11 @@ function WeekView({ week, today, onPick }: { week: DaySummary[]; today: string; 
   return (
     <View style={{ gap: spacing.sm }}>
       <Text color="text2">{`${onTarget} of ${past.length} day${past.length === 1 ? '' : 's'} on target`}</Text>
+      {past.length ? (
+        <Text variant="caption" color="text2" numeric>
+          {`Targets: ${past[past.length - 1].targets.proteinGrams} g protein · ${past[past.length - 1].targets.caloriesKcal.toLocaleString('en-GB')} kcal`}
+        </Text>
+      ) : null}
       <View style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
         {past.map((s, i) => {
           const { totals } = sumEntries(s.entries.map((e) => ({ ...e.nutrients, isApproximate: e.isApproximate })));
@@ -186,12 +191,14 @@ function WeekView({ week, today, onPick }: { week: DaySummary[]; today: string; 
                 backgroundColor: pressed ? colors.well : colors.card,
               })}>
               <DayDot stage={s.status.stage} mealsDone={s.status.mealsDone} size={22} />
-              <Text style={{ flex: 1, fontFamily: fonts.medium }}>{dayTitle(s.day, today)}</Text>
-              <Text variant="caption" color="pro" numeric style={{ fontFamily: fonts.semibold }}>
-                {`${protein}/${s.targets.proteinGrams} g`}
+              <Text style={{ flex: 1, fontFamily: fonts.medium }} numberOfLines={1}>
+                {dayTitle(s.day, today)}
               </Text>
-              <Text variant="caption" color="text2" numeric style={{ minWidth: 92, textAlign: 'right' }}>
-                {`${kcal}/${s.targets.caloriesKcal.toLocaleString('en-GB')} kcal`}
+              <Text variant="callout" color="pro" numeric style={{ fontFamily: fonts.semibold }}>
+                {`${protein} g`}
+              </Text>
+              <Text variant="callout" color="text2" numeric style={{ minWidth: 84, textAlign: 'right' }}>
+                {`${kcal} kcal`}
               </Text>
             </Pressable>
           );
