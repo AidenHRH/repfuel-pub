@@ -143,6 +143,13 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- opened once per visit, with the meal it opened on
   }, [mode]);
   const inBasket = useBasket(forDay);
+  const tileMeal = (row: 'snack' | 'drink'): MealCategory => (mealPicked || inBasket.length > 0 ? category : row);
+  const followTile = (row: 'snack' | 'drink') => {
+    if (mealPicked || inBasket.length > 0) return;
+    setCategory(row);
+    setMealPicked(true);
+    basket.setMeal(row);
+  };
   const closeLogFood = () => {
     if (mode !== 'home' || inBasket.length === 0) return router.back();
     const n = inBasket.length === 1 ? '1 item' : `${inBasket.length} items`;
@@ -482,19 +489,20 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
       {mode === 'home' ? (
         <>
           <TileRow title="Favourites" items={favouriteTiles} category={category} onLogged={() => undefined} />
-          {/* Snack and drink tiles go under Snacks and Drinks unless a meal was picked on purpose. */}
+          {/* A snack or drink tile goes under Snacks or Drinks unless a meal was picked or is being built: then it
+              sets the basket's meal ("Your snack"), and what comes after joins it. */}
           <TileRow
             title="Snacks"
             items={snackTiles}
-            category={mealPicked ? category : 'snack'}
-            onLogged={() => undefined}
+            category={tileMeal('snack')}
+            onLogged={() => followTile('snack')}
             removal={{ label: 'Remove from Snacks', run: (id) => setInSnacksRow(db, id, false) }}
           />
           <TileRow
             title="Drinks"
             items={drinkTiles}
-            category={mealPicked ? category : 'drink'}
-            onLogged={() => undefined}
+            category={tileMeal('drink')}
+            onLogged={() => followTile('drink')}
             removal={{ label: 'Remove from Drinks', run: (id) => setInDrinksRow(db, id, false) }}
           />
           <View style={{ gap: spacing.sm }}>

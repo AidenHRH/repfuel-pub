@@ -126,3 +126,21 @@ test('+ Add a drink opens the scanner for the same meal; + Add a snack opens sea
   expect(await screen.findByRole('header', { name: 'Search food' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Snack' }).props.accessibilityState.selected).toBe(true);
 });
+
+test('the first tile sets the meal when none was picked; what comes after joins it', async () => {
+  await renderRouter(appDir, { initialUrl: '/' });
+  await fireEvent.press(await screen.findByRole('button', { name: 'Log food' }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Meal deal sandwich' }));
+  expect(await screen.findByRole('header', { name: 'Your snack · 1 item' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Snack' }).props.accessibilityState.selected).toBe(true);
+  await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Coke can' }));
+  await screen.findByRole('header', { name: 'Your snack · 2 items' });
+  expect((await entriesForDay(mockDb, '2026-10-22')).map((e) => e.mealCategory)).toEqual(['snack', 'snack']);
+});
+
+test('with lunch picked, a drink tile joins the lunch', async () => {
+  await openLunch();
+  await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Coke can' }));
+  await screen.findByRole('header', { name: 'Your lunch · 1 item' });
+  expect((await entriesForDay(mockDb, '2026-10-22')).map((e) => e.mealCategory)).toEqual(['lunch']);
+});

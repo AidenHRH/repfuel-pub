@@ -111,7 +111,8 @@ export default function TakeawayScreen() {
                       <Text variant="callout" style={{ fontFamily: fonts.semibold }}>
                         {s.label}
                       </Text>
-                      <Text variant="caption" color="text2" numeric>{`≈ ${s.kcal} kcal · ${s.proteinG} g`}</Text>
+                      <Text variant="caption" color="text2" numeric>{`≈ ${s.kcal} kcal`}</Text>
+                      <Text variant="caption" color="pro" numeric>{`${s.proteinG} g protein`}</Text>
                     </Pressable>
                   ))}
                 </View>
