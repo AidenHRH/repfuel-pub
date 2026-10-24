@@ -1,3 +1,4 @@
+import { photoFor } from '@/data/foodPhotos';
 import { localDayKey } from '@/domain/dates';
 import { drinkMeasures, isDrink } from '@/domain/drinks';
 import { mealCategoryFor } from '@/domain/meals';
@@ -204,11 +205,22 @@ export async function restoreEntry(db: Db, entry: FoodLogEntry): Promise<void> {
   await insert(db, entry);
 }
 
+type PhotoRow = Row & { food_image: string | null; food_preset: string | null; recipe_photo: string | null };
+
+/** A day's entries in time order, each with its photo when there is one (the owner's, the pack's or a built-in's). */
 export async function entriesForDay(db: Db, localDay: string): Promise<FoodLogEntry[]> {
-  const rows = await db.getAll<Row>('SELECT * FROM food_log_entry WHERE local_day = ? ORDER BY logged_at, created_at', [
-    localDay,
-  ]);
-  return rows.map(toEntry);
+  const rows = await db.getAll<PhotoRow>(
+    `SELECT e.*, f.image_url AS food_image, f.preset_id AS food_preset, p.file_uri AS recipe_photo
+     FROM food_log_entry e
+     LEFT JOIN food_product f ON f.id = e.food_product_id
+     LEFT JOIN recipe_photo p ON p.recipe_ref = 'recipe:' || e.recipe_id
+     WHERE e.local_day = ? ORDER BY e.logged_at, e.created_at`,
+    [localDay],
+  );
+  return rows.map((row) => {
+    const photo = row.recipe_photo ?? photoFor({ imageUrl: row.food_image, presetId: row.food_preset });
+    return photo ? { ...toEntry(row), photo } : toEntry(row);
+  });
 }
 
 export async function dayTotals(db: Db, localDay: string): Promise<DayTotals> {

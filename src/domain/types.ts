@@ -105,6 +105,8 @@ export type FoodLogEntry = {
   localDay: string;
   mealCategory: MealCategory;
   notes: string | null;
+  /** The food's photo (pack, built-in or the owner's), when the diary shows it; not stored on the entry. */
+  photo?: string;
 };
 
 /** Something the owner can log in one tap. `nutrients` are for `defaultAmount`. */

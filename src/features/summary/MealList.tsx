@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 
+import { FoodThumb } from '@/components/FoodThumb';
 import { Text } from '@/components/Text';
 import { localTimeLabel } from '@/domain/dates';
 import { MAIN_MEALS } from '@/domain/dayStatus';
@@ -193,6 +194,7 @@ function EntryRow({
             // Opaque, so the swipe actions stay hidden underneath until the row slides.
             backgroundColor: pressed ? colors.well : colors.card,
           })}>
+          <FoodThumb uri={entry.photo} name={entry.name} size={40} />
           <View style={{ flex: 1, gap: 3 }}>
             <Text style={{ fontFamily: fonts.medium }} numberOfLines={1}>
               {entry.name}

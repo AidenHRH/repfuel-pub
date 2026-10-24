@@ -1,9 +1,10 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { FoodThumb } from '@/components/FoodThumb';
+import { photoFor } from '@/data/foodPhotos';
 import { BarcodeIcon, ChevronIcon, PlusIcon, SearchIcon } from '@/components/icons';
 import { ModalScreen } from '@/components/ModalScreen';
 import { Segmented } from '@/components/Segmented';
@@ -458,7 +459,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
                     label={label}
                     name={item.name}
                     detail={item.detail}
-                    imageUrl={item.food?.imageUrl ?? null}
+                    imageUrl={item.food ? photoFor(item.food) : null}
                     grade={item.food?.health?.nutriscore}
                     trailing={ask ? 'chevron' : 'plus'}
                     disabled={!ask && !item.loggable}
@@ -641,30 +642,7 @@ function Row({
         borderTopColor: colors.sep,
         backgroundColor: pressed ? colors.well : 'transparent',
       })}>
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          accessibilityLabel={`${name} picture`}
-          contentFit="contain"
-          cachePolicy="memory-disk"
-          transition={120}
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 10,
-            backgroundColor: '#FFFFFF',
-          }}
-        />
-      ) : showPicture ? (
-        <View
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 10,
-            backgroundColor: colors.well,
-          }}
-        />
-      ) : null}
+      {imageUrl || showPicture ? <FoodThumb uri={imageUrl} name={name} size={48} /> : null}
       <View style={{ flex: 1, gap: 2 }}>
         <Text style={{ fontFamily: fonts.medium }} numberOfLines={2}>
           {name}
@@ -755,18 +733,7 @@ function HitRow({
           paddingVertical: spacing.md - 2,
           backgroundColor: pressed ? colors.well : 'transparent',
         })}>
-        {hit.imageUrl ? (
-          <Image
-            source={{ uri: hit.imageUrl }}
-            accessibilityLabel={`${name} picture`}
-            contentFit="contain"
-            cachePolicy="memory-disk"
-            transition={120}
-            style={{ width: 52, height: 52, borderRadius: 12, backgroundColor: '#FFFFFF' }}
-          />
-        ) : (
-          <View style={{ width: 52, height: 52, borderRadius: 12, backgroundColor: colors.well }} />
-        )}
+        <FoodThumb uri={hit.imageUrl} name={name} size={52} />
         <View style={{ flex: 1, gap: 2 }}>
           <Text style={{ fontFamily: fonts.semibold }} numberOfLines={2}>
             {name}
