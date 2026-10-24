@@ -79,7 +79,11 @@ export async function planCandidates(db: Db, prefs: DietPrefs): Promise<PlanCand
   const tags = await db.getAll<{ recipe_id: string; preset_id: string }>(
     `SELECT i.recipe_id, f.preset_id FROM recipe_ingredient i JOIN food_product f ON f.id = i.food_product_id WHERE f.preset_id IS NOT NULL`,
   );
+  // Logging a planned dish saves it under My meals with the same name: that's the same dish, not another to shuffle to.
+  const nameKey = (name: string) => name.trim().toLowerCase();
+  const templateNames = new Set(out.map((c) => nameKey(c.name)));
   for (const recipe of await listRecipes(db, {})) {
+    if (templateNames.has(nameKey(recipe.name))) continue;
     const contains = tags.filter((t) => t.recipe_id === recipe.id).flatMap((t) => CONTAINS[t.preset_id] ?? []);
     if (!fitsDiet(contains, excluded)) continue;
     const { nutrients } = await recipeNutrients(db, recipe.id);

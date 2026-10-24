@@ -1,6 +1,6 @@
 import type { Db } from '@/database/Db';
 import { entriesForDay, logLoggable } from '@/database/repositories/foodLogRepository';
-import { listRecipes } from '@/database/repositories/recipeRepository';
+import { createRecipe, listRecipes } from '@/database/repositories/recipeRepository';
 import {
   getPlan,
   hasPlan,
@@ -15,7 +15,7 @@ import {
   shuffleDay,
 } from '@/database/repositories/mealPlanRepository';
 import { DEFAULT_DIET } from '@/domain/diet';
-import { getMealTemplate } from '@/domain/mealTemplates';
+import { getMealTemplate, MEAL_TEMPLATES } from '@/domain/mealTemplates';
 
 import { migratedDb, seedRegulars } from '../helpers/seed';
 
@@ -106,4 +106,17 @@ test('a meal you usually log as a drink (a shake) never breaks a plan', async ()
   expect(shake.slots.every((s) => ['breakfast', 'lunch', 'dinner', 'snack'].includes(s))).toBe(true);
   await makePlan(db, { from: monday, seed: 1 });
   expect((await getPlan(db, days)).every((d) => d.meals.length >= 3)).toBe(true);
+});
+
+test('a saved copy of a planned dish is not offered as a second, different dish', async () => {
+  const { foods } = await seedRegulars(db);
+  const dish = MEAL_TEMPLATES.find((t) => t.slot === 'dinner')!;
+  await createRecipe(db, {
+    name: ` ${dish.name.toUpperCase()} `,
+    portionsMade: 1,
+    ingredients: [{ kind: 'food', foodId: foods.oats.id, amount: 80, unit: 'g' }],
+  });
+  const named = (await planCandidates(db, DEFAULT_DIET)).filter((c) => c.name.trim().toLowerCase() === dish.name.toLowerCase());
+  expect(named).toHaveLength(1);
+  expect(named[0]).toMatchObject({ kind: 'template', id: dish.id });
 });
