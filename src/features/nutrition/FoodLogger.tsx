@@ -142,7 +142,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- opened once per visit, with the meal it opened on
   }, [mode]);
-  const inBasket = useBasket(forDay);
+  const inBasket = useBasket();
   const tileMeal = (row: 'snack' | 'drink'): MealCategory => (mealPicked || inBasket.length > 0 ? category : row);
   const followTile = (row: 'snack' | 'drink') => {
     if (mealPicked || inBasket.length > 0) return;

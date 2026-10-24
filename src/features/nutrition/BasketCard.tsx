@@ -5,7 +5,6 @@ import { FoodThumb } from '@/components/FoodThumb';
 import { Text } from '@/components/Text';
 import { useDb } from '@/database/DatabaseProvider';
 import { entriesForDay } from '@/database/repositories/foodLogRepository';
-import { localDayKey } from '@/domain/dates';
 import { amountLabel, kcalLabel } from '@/domain/format';
 import { MEAL_LABELS } from '@/domain/meals';
 import { roundForDisplay, sumEntries } from '@/domain/nutrition';
@@ -18,7 +17,7 @@ import { nutritionEvents } from './events';
 import { useDayLog } from './useDayLog';
 
 /** The basket's entries as saved (with photos and any changed amount), in the order they were added. */
-export function useBasket(day: string | null): FoodLogEntry[] {
+export function useBasket(): FoodLogEntry[] {
   const db = useDb();
   const [ids, setIds] = useState<string[]>(() => basket.items().map((e) => e.id));
   const [saved, setSaved] = useState<FoodLogEntry[]>([]);
@@ -29,14 +28,23 @@ export function useBasket(day: string | null): FoodLogEntry[] {
   useEffect(() => {
     let cancelled = false;
     if (!key) return;
-    entriesForDay(db, day ?? localDayKey(new Date())).then(
-      (all) => !cancelled && setSaved(all),
+    // Each item is read back from its own day (a past day's meal, or today's).
+    const days = [...new Set(basket.items().map((e) => e.localDay))];
+    Promise.all(days.map((d) => entriesForDay(db, d))).then(
+      (lists) => {
+        if (cancelled) return;
+        const all = lists.flat();
+        setSaved(all);
+        // Deleted elsewhere (its own screen): out of the basket too.
+        const present = new Set(all.map((e) => e.id));
+        for (const e of basket.items()) if (!present.has(e.id)) basket.remove(e.id);
+      },
       () => undefined,
     );
     return () => {
       cancelled = true;
     };
-  }, [db, day, key, version]);
+  }, [db, key, version]);
   if (!key) return [];
   const byId = new Map(saved.map((e) => [e.id, e]));
   return ids.map((id) => byId.get(id) ?? basket.items().find((e) => e.id === id)!).filter(Boolean);

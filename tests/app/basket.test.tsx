@@ -144,3 +144,16 @@ test('with lunch picked, a drink tile joins the lunch', async () => {
   await screen.findByRole('header', { name: 'Your lunch · 1 item' });
   expect((await entriesForDay(mockDb, '2026-10-22')).map((e) => e.mealCategory)).toEqual(['lunch']);
 });
+
+test('an item deleted from its own screen leaves the basket too', async () => {
+  const alert = jest.spyOn(Alert, 'alert');
+  await openLunch();
+  await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Meal deal sandwich' }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Log 1 serving of Coke can' }));
+  await fireEvent.press(await screen.findByRole('button', { name: /^Coke can, 1 serving/ }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Delete entry' }));
+  const confirm = alert.mock.calls.at(-1)?.[2]?.find((b) => b.text === 'Delete');
+  if (confirm) await act(async () => void (await confirm.onPress!()));
+  expect(await screen.findByRole('header', { name: 'Your lunch · 1 item' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Log 1 item' })).toBeTruthy();
+});
