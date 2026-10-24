@@ -107,6 +107,13 @@ export default function RootLayout() {
                       }}
                     />
                     <Stack.Screen
+                      name="session/[id]"
+                      options={{
+                        presentation: 'modal',
+                        animation: 'slide_from_bottom',
+                      }}
+                    />
+                    <Stack.Screen
                       name="lift-progress/[id]"
                       options={{
                         presentation: 'modal',

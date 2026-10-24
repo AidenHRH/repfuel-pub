@@ -1,7 +1,8 @@
 import { localDayKey } from './dates';
+import type { MuscleGroup } from './exercises';
 import { dayLabel, type SetLike } from './lifts';
 
-export type FeedLift = { workoutId: string; exerciseName: string; at: string; sets: SetLike[] };
+export type FeedLift = { workoutId: string; exerciseName: string; muscleGroup?: MuscleGroup; at: string; sets: SetLike[] };
 export type FeedClass = {
   id: string;
   className: string;

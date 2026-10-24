@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -12,7 +12,9 @@ import { Text } from '@/components/Text';
 import { useDb } from '@/database/DatabaseProvider';
 import { deleteClass } from '@/database/repositories/classRepository';
 import { deleteLift } from '@/database/repositories/liftRepository';
-import { trainingFeed } from '@/database/repositories/trainingRepository';
+import { sessionBreaks, setSessionBreak, trainingFeed } from '@/database/repositories/trainingRepository';
+import { localTimeLabel } from '@/domain/dates';
+import { groupSessions, type Session, type SessionBreaks } from '@/domain/sessions';
 import type { RecordEvent } from '@/domain/records';
 import { dayEffort, groupFeedByDay, weekSummary, type FeedItem } from '@/domain/training';
 import { effortColor } from '@/features/progress/parts';
@@ -30,6 +32,7 @@ export default function WorkoutsScreen() {
   const router = useRouter();
   const { colors, name: theme } = useTheme();
   const [items, setItems] = useState<FeedItem[] | null>(null);
+  const [breaks, setBreaks] = useState<SessionBreaks>({});
   const [version, setVersion] = useState(0);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [saved, setSaved] = useState<{ key: number; name: string } | null>(null);
@@ -48,14 +51,38 @@ export default function WorkoutsScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    trainingFeed(db, 60).then(
-      (list) => !cancelled && setItems(list),
+    Promise.all([trainingFeed(db, 60), sessionBreaks(db)]).then(
+      ([list, b]) => {
+        if (cancelled) return;
+        setItems(list);
+        setBreaks(b);
+      },
       () => !cancelled && setItems([]),
     );
     return () => {
       cancelled = true;
     };
   }, [db, version]);
+
+  const moveLift = async (workoutId: string, value: 'split' | 'join') => {
+    await safely('move that lift', () => setSessionBreak(db, workoutId, value));
+    workoutEvents.emit({ type: 'changed' });
+  };
+
+  /** Hold: move a lift between sessions, or delete it. */
+  const holdOptions = (item: FeedItem, session: Session, earlierSameDay: boolean) => {
+    if (item.kind !== 'lift') return confirmDelete(item);
+    const first = session.items[0] === item;
+    const name = item.lift.exerciseName;
+    Alert.alert(name, undefined, [
+      ...(first && earlierSameDay
+        ? [{ text: 'Move to previous session', onPress: () => void moveLift(item.lift.workoutId, 'join') }]
+        : []),
+      ...(!first ? [{ text: 'Start new session', onPress: () => void moveLift(item.lift.workoutId, 'split') }] : []),
+      { text: 'Delete', style: 'destructive' as const, onPress: () => confirmDelete(item) },
+      { text: 'Cancel', style: 'cancel' as const },
+    ]);
+  };
 
   const confirmDelete = (item: FeedItem) =>
     Alert.alert(
@@ -152,18 +179,43 @@ export default function WorkoutsScreen() {
                 </Text>
               ) : null}
             </View>
-            <View style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
-              {day.items.map((item, i) => (
-                <FeedCard
-                  key={item.kind === 'lift' ? item.lift.workoutId : item.session.id}
-                  item={item}
-                  day={day.label}
-                  first={i === 0}
-                  onPress={() => router.push(item.kind === 'lift' ? `/lift/${item.lift.workoutId}` : `/class/${item.session.id}`)}
-                  onLongPress={() => confirmDelete(item)}
-                />
-              ))}
-            </View>
+            {groupSessions(day.items, breaks).map((session, si, all) => (
+              <View key={session.id} style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
+                {session.kind === 'strength' ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${localTimeLabel(session.start)} session: ${session.name}, ${session.exercises} exercise${session.exercises === 1 ? '' : 's'}, ${session.sets} sets`}
+                    accessibilityHint="Shows every set"
+                    onPress={() => router.push(`/session/${session.id}`)}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'baseline',
+                      gap: spacing.sm,
+                      paddingHorizontal: spacing.lg,
+                      paddingTop: spacing.md,
+                      paddingBottom: spacing.xs,
+                      opacity: pressed ? 0.6 : 1,
+                    })}>
+                    <Text variant="callout" style={{ fontFamily: fonts.semibold, flex: 1 }} numeric>
+                      {`${localTimeLabel(session.start)} · ${session.name}`}
+                    </Text>
+                    <Text variant="caption" color="accent">
+                      Sets ›
+                    </Text>
+                  </Pressable>
+                ) : null}
+                {session.items.map((item, i) => (
+                  <FeedCard
+                    key={item.kind === 'lift' ? item.lift.workoutId : item.session.id}
+                    item={item}
+                    day={day.label}
+                    first={i === 0}
+                    onPress={() => router.push(item.kind === 'lift' ? `/lift/${item.lift.workoutId}` : `/class/${item.session.id}`)}
+                    onLongPress={() => holdOptions(item, session, all.slice(si + 1).some((o) => o.kind === 'strength'))}
+                  />
+                ))}
+              </View>
+            ))}
           </View>
         ))}
       </Screen>
