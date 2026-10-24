@@ -107,7 +107,7 @@ export default function SettingsScreen() {
             accessibilityLabel="Daily motivation"
             value={showMotivation ?? true}
             onValueChange={setShowMotivation}
-            trackColor={{ true: colors.pro, false: colors.well }}
+            trackColor={{ true: colors.accent, false: colors.well }}
             thumbColor="#FFFFFF"
           />
         </ListRow>

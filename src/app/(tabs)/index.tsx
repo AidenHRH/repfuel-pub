@@ -118,7 +118,7 @@ export default function TodayScreen() {
           <PlannedNow />
           {log && log !== 'error' && log.entries.length === 0 ? (
             <EmptyState
-              icon={<NutritionIcon color={colors.pro} />}
+              icon={<NutritionIcon color={colors.accent} />}
               title="Nothing logged yet today"
               message="Tap Log food: your meals, snacks and search are all there, one tap each."
             />
@@ -270,7 +270,7 @@ function EntryRow({
               label="Edit"
               accessibilityLabel={`Edit ${entry.name}`}
               background={colors.well}
-              color={colors.pro}
+              color={colors.accent}
               onPress={act(onEdit)}
             />
             <SwipeAction

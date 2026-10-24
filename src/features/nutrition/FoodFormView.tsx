@@ -124,7 +124,7 @@ export function FoodFormView({ values, errors, onChange, quick }: Props) {
             accessibilityLabel="These are estimates"
             value={values.approximate}
             onValueChange={set('approximate')}
-            trackColor={{ true: colors.pro, false: colors.well }}
+            trackColor={{ true: colors.accent, false: colors.well }}
             thumbColor="#FFFFFF"
           />
         </ListRow>

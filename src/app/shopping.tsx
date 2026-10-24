@@ -69,7 +69,7 @@ export default function ShoppingScreen() {
       action={count ? { label: 'Share', onPress: share } : undefined}>
       {list && count === 0 ? (
         <EmptyState
-          icon={<NutritionIcon color={colors.pro} />}
+          icon={<NutritionIcon color={colors.accent} />}
           title="Nothing to buy yet"
           message="Make a meal plan in Nutrition and its shopping list appears here."
         />

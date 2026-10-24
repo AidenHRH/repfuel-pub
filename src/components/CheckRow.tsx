@@ -49,8 +49,8 @@ export function CheckRow({
           height: 24,
           borderRadius: 12,
           borderWidth: 2,
-          borderColor: checked ? colors.pro : colors.text2,
-          backgroundColor: checked ? colors.pro : 'transparent',
+          borderColor: checked ? colors.accent : colors.text2,
+          backgroundColor: checked ? colors.accent : 'transparent',
           alignItems: 'center',
           justifyContent: 'center',
         }}>

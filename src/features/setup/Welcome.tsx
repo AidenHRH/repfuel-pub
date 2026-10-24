@@ -121,7 +121,7 @@ export function Welcome({ onDone }: { onDone: () => void }) {
         borderRadius: radii.card,
         backgroundColor: colors.card,
         borderWidth: 2,
-        borderColor: selected ? colors.pro : 'transparent',
+        borderColor: selected ? colors.accent : 'transparent',
         gap: 2,
       }}>
       <Text style={{ fontFamily: fonts.medium }}>{label}</Text>

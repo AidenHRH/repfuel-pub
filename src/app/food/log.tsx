@@ -251,7 +251,7 @@ export default function LogFoodAmountScreen() {
               accessibilityLabel={category === 'drink' ? 'Add to Drinks' : 'Add to Snacks'}
               value={keepTile}
               onValueChange={setKeepTile}
-              trackColor={{ true: colors.pro, false: colors.well }}
+              trackColor={{ true: colors.accent, false: colors.well }}
               thumbColor="#FFFFFF"
             />
           </ListRow>

@@ -53,7 +53,7 @@ export function ThisWeek() {
           const isClass = item.kind === 'class';
           const pr = item.kind === 'lift' && item.isPr;
           const tint = pr ? colors.prBg : isClass ? colors.effortBg : colors.well;
-          const iconColor = pr ? colors.pr : isClass ? colors.effort : colors.pro;
+          const iconColor = pr ? colors.pr : isClass ? colors.effort : colors.accent;
           const name = item.kind === 'lift' ? item.lift.exerciseName : item.session.className;
           const detail =
             item.kind === 'lift'

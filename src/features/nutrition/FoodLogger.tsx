@@ -284,7 +284,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
               onSubmitEditing={() => void searchOnline()}
               returnKeyType="search"
               autoFocus
-              selectionColor={colors.pro}
+              selectionColor={colors.accent}
               style={{
                 flex: 1,
                 color: colors.text,
@@ -302,7 +302,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
               width: 48,
               height: 48,
               borderRadius: radii.control + 2,
-              backgroundColor: colors.pro,
+              backgroundColor: colors.accent,
               alignItems: 'center',
               justifyContent: 'center',
               transform: [{ scale: pressed ? 0.95 : 1 }],
@@ -514,8 +514,8 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
                 borderRadius: radii.card,
                 backgroundColor: pressed ? colors.well : colors.card,
               })}>
-              <SearchIcon color={colors.pro} size={18} />
-              <Text color="pro" style={{ fontFamily: fonts.semibold, flexShrink: 1 }} numberOfLines={1}>
+              <SearchIcon color={colors.accent} size={18} />
+              <Text color="accent" style={{ fontFamily: fonts.semibold, flexShrink: 1 }} numberOfLines={1}>
                 {`Search for “${query}”`}
               </Text>
             </Pressable>
@@ -527,7 +527,7 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
           ) : null}
           {shownOnline?.state === 'loading' || (!shownOnline && query.length >= AUTO_SEARCH_MIN) ? (
             <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center', padding: spacing.md }}>
-              <ActivityIndicator color={colors.pro} />
+              <ActivityIndicator color={colors.accent} />
               <Text variant="callout" color="text2">
                 Searching the shops…
               </Text>
@@ -675,11 +675,11 @@ function Row({
           width: 32,
           height: 32,
           borderRadius: 16,
-          backgroundColor: trailing === 'chevron' ? colors.well : colors.pro,
+          backgroundColor: trailing === 'chevron' ? colors.well : colors.accent,
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        {trailing === 'chevron' ? <ChevronIcon color={colors.pro} size={16} /> : <PlusIcon color={colors.onAccent} size={16} />}
+        {trailing === 'chevron' ? <ChevronIcon color={colors.accent} size={16} /> : <PlusIcon color={colors.onAccent} size={16} />}
       </View>
     </Pressable>
   );
@@ -783,7 +783,7 @@ function HitRow({
             height: 36,
             borderRadius: 18,
             marginRight: spacing.md,
-            backgroundColor: colors.pro,
+            backgroundColor: colors.accent,
             alignItems: 'center',
             justifyContent: 'center',
             transform: [{ scale: pressed ? 0.92 : 1 }],
@@ -801,7 +801,7 @@ function HitRow({
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-          <ChevronIcon color={colors.pro} size={16} />
+          <ChevronIcon color={colors.accent} size={16} />
         </View>
       )}
     </View>

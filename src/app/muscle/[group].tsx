@@ -90,7 +90,7 @@ export default function MuscleScreen() {
               caption={`Your ${label.toLowerCase()} lifts’ 1-rep max estimates, against where each started in this time.`}>
               <LineChart
                 values={m.strength}
-                color={colors.pro}
+                color={colors.accent}
                 xTicks={ticks}
                 yFormat={(v) => `${Math.round(v)}%`}
                 accessibilityLabel={`${label} strength over ${RANGE_LABELS[range]}: ${gain === null ? 'no change' : `${gain > 0 ? 'up' : 'down'} ${fmt(Math.abs(gain))}%`}`}
@@ -103,7 +103,7 @@ export default function MuscleScreen() {
             caption={`Bars: hard ${label.toLowerCase()} sets each week. Line: how hard they felt on average.`}>
             <BarChart
               values={m.weeklySets}
-              color={colors.pro}
+              color={colors.accent}
               xTicks={ticks}
               height={90}
               accessibilityLabel={`Hard ${label.toLowerCase()} sets each week`}

@@ -118,14 +118,14 @@ export default function LiftProgressScreen() {
                 {metric === 'volume' ? (
                   <BarChart
                     values={values.map((v) => v ?? 0)}
-                    color={colors.pro}
+                    color={colors.accent}
                     xTicks={ticks}
                     accessibilityLabel={`Volume over the last ${shown.length} sessions`}
                   />
                 ) : (
                   <LineChart
                     values={values}
-                    color={metric === 'effort' ? colors.effort : colors.pro}
+                    color={metric === 'effort' ? colors.effort : colors.accent}
                     dotColors={
                       metric === 'effort'
                         ? undefined

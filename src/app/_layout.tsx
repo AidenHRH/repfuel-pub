@@ -27,7 +27,7 @@ function NavigationTheme({ children }: { children: ReactNode }) {
       card: colors.bg,
       text: colors.text,
       border: colors.sep,
-      primary: colors.pro,
+      primary: colors.accent,
     },
   };
   return (

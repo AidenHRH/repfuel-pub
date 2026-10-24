@@ -17,7 +17,7 @@ export function MeterRow({ label, value, max, valueLabel }: { label: string; val
         {label}
       </Text>
       <View style={{ flex: 1, height: 10, borderRadius: radii.pill, backgroundColor: colors.well, overflow: 'hidden' }}>
-        <View style={{ width: `${share * 100}%`, height: 10, borderRadius: radii.pill, backgroundColor: colors.pro }} />
+        <View style={{ width: `${share * 100}%`, height: 10, borderRadius: radii.pill, backgroundColor: colors.accent }} />
       </View>
       <Text variant="caption" color="text2" numeric style={{ width: 32, textAlign: 'right' }}>
         {valueLabel}

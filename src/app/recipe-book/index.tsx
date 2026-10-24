@@ -100,7 +100,7 @@ export default function RecipeBookScreen() {
         placeholderTextColor={colors.text2}
         value={search}
         onChangeText={setSearch}
-        selectionColor={colors.pro}
+        selectionColor={colors.accent}
         style={{
           backgroundColor: colors.card,
           borderRadius: radii.control,

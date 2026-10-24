@@ -141,7 +141,7 @@ export function AmountPicker({ food, state, autoFocus }: { food: AmountFood; sta
                 value={state.countText}
                 onChangeText={state.typeCount}
                 keyboardType="decimal-pad"
-                selectionColor={colors.pro}
+                selectionColor={colors.accent}
                 style={{
                   width: 56,
                   textAlign: 'center',

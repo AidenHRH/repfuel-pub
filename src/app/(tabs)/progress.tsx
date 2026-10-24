@@ -57,7 +57,7 @@ export default function ProgressScreen() {
     return (
       <Screen title="Progress">
         <EmptyState
-          icon={<TrophyIcon color={colors.pro} />}
+          icon={<TrophyIcon color={colors.accent} />}
           title="No workouts yet"
           message="Log a workout and your progress, effort and best sets show up here, worked out from everything you log."
         />
@@ -96,7 +96,7 @@ export default function ProgressScreen() {
           placeholderTextColor={colors.text2}
           value={search}
           onChangeText={setSearch}
-          selectionColor={colors.pro}
+          selectionColor={colors.accent}
           style={{
             backgroundColor: colors.card,
             borderRadius: radii.control,

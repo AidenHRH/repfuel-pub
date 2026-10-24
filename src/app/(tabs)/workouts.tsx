@@ -124,7 +124,7 @@ export default function WorkoutsScreen() {
 
         {items && items.length === 0 ? (
           <EmptyState
-            icon={<WorkoutsIcon color={colors.pro} />}
+            icon={<WorkoutsIcon color={colors.accent} />}
             title="No training yet"
             message="Log a set or three as you train, or a class like Hyrox. RepFuel remembers last time and spots your PRs."
           />

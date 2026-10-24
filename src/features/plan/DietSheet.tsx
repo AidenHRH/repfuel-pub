@@ -33,7 +33,7 @@ export function DietSheet({
         accessibilityLabel={label}
         value={draft[key]}
         onValueChange={(value) => setDraft((d) => ({ ...d, [key]: value }))}
-        trackColor={{ true: colors.pro, false: colors.well }}
+        trackColor={{ true: colors.accent, false: colors.well }}
         thumbColor="#FFFFFF"
       />
     </ListRow>
@@ -61,7 +61,7 @@ export function DietSheet({
               })}>
               <Text>{DIET_STYLE_LABELS[style]}</Text>
               {selected ? (
-                <Text color="pro" variant="headline">
+                <Text color="accent" variant="headline">
                   ✓
                 </Text>
               ) : null}

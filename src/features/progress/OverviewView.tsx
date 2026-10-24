@@ -129,7 +129,7 @@ export function OverviewView({
         caption="Weight × reps, added up each week. Rising means more work done.">
         <BarChart
           values={tonnes}
-          color={colors.pro}
+          color={colors.accent}
           faded={tonnes.map((t) => t > 0 && t < median * 0.5)}
           xTicks={ticks}
           accessibilityLabel={`Tonnes lifted each week over ${RANGE_LABELS[range]}, ${fmt(o.tonnes)} in all`}

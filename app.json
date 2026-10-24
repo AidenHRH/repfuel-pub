@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "repfuel",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#000000",
+    "backgroundColor": "#141414",
     "android": {
       "package": "com.aidenhrh.repfuel",
       "versionCode": 1,
@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#000000",
+          "backgroundColor": "#141414",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120
         }

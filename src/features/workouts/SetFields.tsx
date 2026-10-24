@@ -81,7 +81,7 @@ export function SetFields({ index, set, tracking, bodyweight, onChange, onRemove
               value={!!set.assisted}
               // Help usually means nothing was left: effort 10, which can still be changed.
               onValueChange={(on) => onChange(on ? { assisted: 1, effort: 10 } : { assisted: null })}
-              trackColor={{ true: colors.pro, false: colors.well }}
+              trackColor={{ true: colors.accent, false: colors.well }}
               thumbColor="#FFFFFF"
             />
           </View>
@@ -166,7 +166,7 @@ function NumberBox({
           placeholder={placeholder}
           placeholderTextColor={colors.text2}
           keyboardType={keyboardType}
-          selectionColor={colors.pro}
+          selectionColor={colors.accent}
           style={{
             flex: 1,
             minWidth: 0,

@@ -40,7 +40,7 @@ export function ReminderSettings() {
             accessibilityLabel="Creatine reminder"
             value={reminder?.enabled ?? false}
             onValueChange={(on) => void toggle(on)}
-            trackColor={{ true: colors.pro, false: colors.well }}
+            trackColor={{ true: colors.accent, false: colors.well }}
             thumbColor="#FFFFFF"
           />
         </ListRow>

@@ -12,7 +12,11 @@ export type Palette = {
   text2: string;
   sep: string;
   kcal: string;
+  /** Protein: its numbers, bars and rings. */
   pro: string;
+  /** Actions: buttons, links, selected pills, the active tab. */
+  accent: string;
+  /** Text and icons on an accent fill. */
   onAccent: string;
   scrim: string;
   track: string;
@@ -37,27 +41,28 @@ export type Palette = {
   onEffortScale: string;
 };
 
-// Values match the approved mockup. Every screen takes colours from here.
+// Ember (2026-10-24): coral for actions, teal for protein, amber for calories. Values match the approved mockup. Every screen takes colours from here.
 export const palettes: Record<ThemeName, Palette> = {
   dark: {
-    bg: '#000000',
-    card: '#1C1C1E',
-    well: '#2C2C2E',
-    seg: '#636366',
-    sheet: '#1C1C1E',
-    text: '#F5F5F7',
-    text2: '#A1A1A6',
+    bg: '#141414',
+    card: '#1F1F1F',
+    well: '#2E2E2E',
+    seg: '#5A5552',
+    sheet: '#1F1F1F',
+    text: '#F7F3F0',
+    text2: '#ADA5A0',
     sep: 'rgba(255,255,255,0.08)',
     kcal: '#FFB547',
-    pro: '#6CB4FF',
-    onAccent: '#06101E',
+    pro: '#2EC4B6',
+    accent: '#FF6B4A',
+    onAccent: '#1A0A05',
     scrim: 'rgba(0,0,0,0.55)',
     track: 'rgba(255,255,255,0.10)',
-    bar: 'rgba(22,22,24,0.88)',
+    bar: 'rgba(26,26,26,0.9)',
     danger: '#FF7B72',
     up: '#30D158',
     ringKcal: '#FFB547',
-    ringPro: '#6CB4FF',
+    ringPro: '#2EC4B6',
     pr: '#FFD25A',
     prBg: '#3A3012',
     onPr: '#1A1400',
@@ -68,24 +73,25 @@ export const palettes: Record<ThemeName, Palette> = {
     onEffortScale: '#0B0B0C',
   },
   light: {
-    bg: '#F2F2F7',
+    bg: '#FAF6F3',
     card: '#FFFFFF',
-    well: '#F2F2F7',
+    well: '#F2ECE8',
     seg: '#FFFFFF',
     sheet: '#FFFFFF',
-    text: '#111113',
-    text2: '#5E5E66',
+    text: '#1A1412',
+    text2: '#665A54',
     sep: 'rgba(0,0,0,0.08)',
     kcal: '#A85A00',
-    pro: '#0A66D9',
+    pro: '#0D7369',
+    accent: '#C23B1A',
     onAccent: '#FFFFFF',
     scrim: 'rgba(0,0,0,0.28)',
     track: 'rgba(0,0,0,0.08)',
-    bar: 'rgba(249,249,251,0.9)',
+    bar: 'rgba(250,246,243,0.92)',
     danger: '#C42B1C',
     up: '#167A35',
     ringKcal: '#F5A524',
-    ringPro: '#2F80ED',
+    ringPro: '#14A394',
     pr: '#7A5A00',
     prBg: '#FFF4CC',
     onPr: '#FFFFFF',

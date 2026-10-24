@@ -246,7 +246,7 @@ export default function ScanScreen() {
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            <BarcodeIcon color={colors.pro} />
+            <BarcodeIcon color={colors.accent} />
           </View>
           <Text variant="headline" style={{ textAlign: 'center' }}>
             {permission && !permission.canAskAgain ? 'Camera is turned off for RepFuel' : 'Scan with your camera'}
@@ -295,7 +295,7 @@ export default function ScanScreen() {
             gap: spacing.md,
             justifyContent: 'center',
           }}>
-          <ActivityIndicator color={colors.pro} />
+          <ActivityIndicator color={colors.accent} />
           <Text variant="callout" color="text2" numeric>
             Looking up {looking}…
           </Text>

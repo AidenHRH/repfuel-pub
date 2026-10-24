@@ -39,7 +39,7 @@ export function HelpSettings() {
           accessibilityLabel="Helpful tips"
           value={tipsOn ?? true}
           onValueChange={(on) => void toggle(on)}
-          trackColor={{ true: colors.pro, false: colors.well }}
+          trackColor={{ true: colors.accent, false: colors.well }}
           thumbColor="#FFFFFF"
         />
       </ListRow>

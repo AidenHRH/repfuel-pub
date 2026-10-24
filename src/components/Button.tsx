@@ -22,8 +22,8 @@ type Props = {
 
 export function Button({ label, onPress, variant = 'primary', disabled, haptic, accessibilityLabel, icon, style }: Props) {
   const { colors } = useTheme();
-  const background = variant === 'primary' ? colors.pro : variant === 'secondary' ? colors.well : 'transparent';
-  const textColor = variant === 'primary' ? 'onAccent' : 'pro';
+  const background = variant === 'primary' ? colors.accent : variant === 'secondary' ? colors.well : 'transparent';
+  const textColor = variant === 'primary' ? 'onAccent' : 'accent';
 
   return (
     <Pressable

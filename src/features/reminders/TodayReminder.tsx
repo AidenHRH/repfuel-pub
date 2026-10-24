@@ -53,10 +53,10 @@ export function TodayReminder() {
           paddingHorizontal: spacing.lg,
           borderRadius: radii.pill,
           justifyContent: 'center',
-          backgroundColor: complete ? colors.well : colors.pro,
+          backgroundColor: complete ? colors.well : colors.accent,
           opacity: pressed ? 0.8 : 1,
         })}>
-        <Text variant="callout" style={{ fontFamily: fonts.semibold, color: complete ? colors.pro : colors.onAccent }}>
+        <Text variant="callout" style={{ fontFamily: fonts.semibold, color: complete ? colors.accent : colors.onAccent }}>
           {complete ? 'Taken ✓' : 'Taken'}
         </Text>
       </Pressable>

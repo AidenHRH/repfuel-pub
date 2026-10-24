@@ -164,7 +164,7 @@ export function ClassEditor({
       <Text
         variant="callout"
         style={{
-          color: selected ? colors.bg : accent ? colors.pro : colors.text,
+          color: selected ? colors.bg : accent ? colors.accent : colors.text,
           fontFamily: selected ? fonts.semibold : fonts.medium,
         }}>
         {label}
@@ -249,7 +249,7 @@ export function ClassEditor({
           placeholder="How it went, PBs, what to work on"
           placeholderTextColor={colors.text2}
           multiline
-          selectionColor={colors.pro}
+          selectionColor={colors.accent}
           style={{
             color: colors.text,
             fontFamily: fonts.regular,

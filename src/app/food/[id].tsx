@@ -94,7 +94,7 @@ export default function EditFoodScreen() {
                 accessibilityLabel={label}
                 value={rows?.now[row] ?? false}
                 onValueChange={(on) => setRows((r) => (r ? { ...r, now: { ...r.now, [row]: on } } : r))}
-                trackColor={{ true: colors.pro, false: colors.well }}
+                trackColor={{ true: colors.accent, false: colors.well }}
                 thumbColor="#FFFFFF"
               />
             </ListRow>

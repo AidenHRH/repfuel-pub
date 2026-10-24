@@ -143,7 +143,7 @@ export default function NutritionScreen() {
               placeholderTextColor={colors.text2}
               value={search}
               onChangeText={setSearch}
-              selectionColor={colors.pro}
+              selectionColor={colors.accent}
               style={{ flex: 1, color: colors.text, fontFamily: fonts.regular, fontSize: 16, padding: 0 }}
             />
           </View>
@@ -160,7 +160,7 @@ export default function NutritionScreen() {
             ) : null}
             {rows && rows.length === 0 && !search ? (
               <EmptyState
-                icon={<NutritionIcon color={colors.pro} />}
+                icon={<NutritionIcon color={colors.accent} />}
                 title={tab === 'meals' ? 'No saved meals yet' : 'No saved foods yet'}
                 message={
                   tab === 'meals'

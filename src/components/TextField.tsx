@@ -58,7 +58,7 @@ export function TextField({
           secureTextEntry={secureTextEntry}
           autoCapitalize={plain ? 'none' : undefined}
           autoCorrect={plain ? false : undefined}
-          selectionColor={colors.pro}
+          selectionColor={colors.accent}
           style={{
             flex: 1,
             minWidth: 0,

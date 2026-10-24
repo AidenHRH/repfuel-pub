@@ -147,7 +147,7 @@ export default function EntryScreen() {
         <Button
           variant="secondary"
           label="Save as a meal"
-          icon={<StarIcon color={colors.pro} size={18} />}
+          icon={<StarIcon color={colors.accent} size={18} />}
           onPress={saveAsMeal}
         />
       ) : null}

@@ -88,7 +88,7 @@ export default function PrepScreen() {
 
       {empty ? (
         <EmptyState
-          icon={<NutritionIcon color={colors.pro} />}
+          icon={<NutritionIcon color={colors.accent} />}
           title="Nothing planned to prep"
           message="Make a meal plan in Nutrition first. Lunches and dinners from it show up here as a cooking session."
         />
@@ -123,7 +123,7 @@ export default function PrepScreen() {
                 onToggle={() => toggle(`box:${b.key}`)}
                 detail={
                   <View style={{ gap: 2 }}>
-                    <Text variant="caption" color="pro">
+                    <Text variant="caption" color="accent">
                       {b.label}
                     </Text>
                     {b.contents ? (

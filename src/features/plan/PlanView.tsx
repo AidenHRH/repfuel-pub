@@ -141,7 +141,7 @@ export function PlanView() {
                   borderRadius: radii.pill,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: on ? colors.pro : colors.well,
+                  backgroundColor: on ? colors.accent : colors.well,
                 }}>
                 <Text variant="callout" style={{ fontFamily: fonts.semibold, color: on ? colors.onAccent : colors.text2 }}>
                   {MEAL_LABELS[slot]}
@@ -231,7 +231,7 @@ export function PlanView() {
                     m.logged ? (
                       <Text
                         variant="caption"
-                        color="pro"
+                        color="accent"
                         accessibilityLabel={`${m.name} logged`}
                         style={{ alignSelf: 'center', paddingHorizontal: spacing.sm }}>
                         Logged ✓

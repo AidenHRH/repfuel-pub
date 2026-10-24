@@ -263,7 +263,7 @@ export function LiftEditor({
           placeholderTextColor={colors.text2}
           value={search}
           onChangeText={setSearch}
-          selectionColor={colors.pro}
+          selectionColor={colors.accent}
           style={{
             backgroundColor: colors.card,
             borderRadius: radii.control,
@@ -288,7 +288,7 @@ export function LiftEditor({
                   minHeight: 36,
                   borderRadius: radii.pill,
                   justifyContent: 'center',
-                  backgroundColor: selected ? colors.pro : colors.card,
+                  backgroundColor: selected ? colors.accent : colors.card,
                 }}>
                 <Text variant="callout" color={selected ? 'onAccent' : 'text'}>
                   {g ? MUSCLE_GROUP_LABELS[g] : 'All'}
@@ -349,7 +349,7 @@ export function LiftEditor({
               accessibilityLabel={`Add ${search.trim()} as an exercise`}
               onPress={addCustom}
               style={{ minHeight: 52, paddingHorizontal: spacing.lg, justifyContent: 'center' }}>
-              <Text color="pro" style={{ fontFamily: fonts.semibold }}>
+              <Text color="accent" style={{ fontFamily: fonts.semibold }}>
                 Add “{search.trim()}”{group ? ` to ${MUSCLE_GROUP_LABELS[group]}` : ''}
               </Text>
             </Pressable>

@@ -60,7 +60,7 @@ export function WeekCard({ week }: { week: WeekSummary }) {
                 backgroundColor: colors.well,
                 flexDirection: 'row',
               }}>
-              {d.strength ? <View style={{ flex: 1, backgroundColor: colors.pro }} /> : null}
+              {d.strength ? <View style={{ flex: 1, backgroundColor: colors.accent }} /> : null}
               {d.classes ? <View style={{ flex: 1, backgroundColor: colors.effort }} /> : null}
             </View>
             <Text
@@ -73,7 +73,7 @@ export function WeekCard({ week }: { week: WeekSummary }) {
         ))}
       </View>
       <View style={{ flexDirection: 'row', gap: spacing.lg }}>
-        {legend(colors.pro, 'Strength')}
+        {legend(colors.accent, 'Strength')}
         {legend(colors.effort, 'Class')}
       </View>
     </Card>

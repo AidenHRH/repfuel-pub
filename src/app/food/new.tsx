@@ -146,7 +146,7 @@ export default function NewFoodScreen() {
               accessibilityLabel="Save to My meals"
               value={saveAsMeal}
               onValueChange={setSaveAsMeal}
-              trackColor={{ true: colors.pro, false: colors.well }}
+              trackColor={{ true: colors.accent, false: colors.well }}
               thumbColor="#FFFFFF"
             />
           </ListRow>

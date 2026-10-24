@@ -378,7 +378,7 @@ export function RecipeEditor({ recipeId, now = false, meal }: { recipeId?: strin
               paddingHorizontal: spacing.lg,
               justifyContent: 'center',
             }}>
-            <Text color="pro" style={{ fontFamily: fonts.semibold }}>
+            <Text color="accent" style={{ fontFamily: fonts.semibold }}>
               Add ingredient
             </Text>
           </Pressable>
@@ -386,7 +386,7 @@ export function RecipeEditor({ recipeId, now = false, meal }: { recipeId?: strin
             variant="secondary"
             label="Scan"
             accessibilityLabel="Scan ingredient"
-            icon={<BarcodeIcon color={colors.pro} size={18} />}
+            icon={<BarcodeIcon color={colors.accent} size={18} />}
             onPress={() => router.push({ pathname: '/scan', params: { for: 'ingredient' } })}
             style={{ paddingHorizontal: spacing.md, minHeight: 36 }}
           />
@@ -411,7 +411,7 @@ export function RecipeEditor({ recipeId, now = false, meal }: { recipeId?: strin
               accessibilityLabel="Save to My meals"
               value={keep}
               onValueChange={setKeep}
-              trackColor={{ true: colors.pro, false: colors.well }}
+              trackColor={{ true: colors.accent, false: colors.well }}
               thumbColor="#FFFFFF"
             />
           </ListRow>
@@ -450,7 +450,7 @@ export function RecipeEditor({ recipeId, now = false, meal }: { recipeId?: strin
               placeholderTextColor={colors.text2}
               value={pickerSearch}
               onChangeText={setPickerSearch}
-              selectionColor={colors.pro}
+              selectionColor={colors.accent}
               style={{
                 backgroundColor: colors.well,
                 borderRadius: radii.control,
@@ -575,7 +575,7 @@ function StepButton(props: { label: string; accessibilityLabel: string; onPress:
         justifyContent: 'center',
         opacity: props.disabled ? 0.4 : 1,
       }}>
-      <Text variant="title" color="pro">
+      <Text variant="title" color="accent">
         {props.label}
       </Text>
     </Pressable>
