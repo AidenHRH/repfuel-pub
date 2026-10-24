@@ -17,15 +17,15 @@ describe('parseOffProduct', () => {
       basis: 'per_100g',
       servingSize: 25,
       packSize: null,
-      nutrients: { kcal: 400, proteinG: 76, carbsG: 9.2, fatG: 6.1, fibreG: 1.4 },
-      missing: [],
+      nutrients: { kcal: 400, proteinG: 76, carbsG: 9.2, fatG: 6.1, fibreG: 1.4, sugarG: null },
+      missing: ['sugarG'],
     });
   });
 
   test('missing nutrients stay unknown and are listed, never zero', () => {
     const draft = parseOffProduct(fixture('partial'))!;
-    expect(draft.nutrients).toEqual({ kcal: 450, proteinG: null, carbsG: null, fatG: 18, fibreG: null });
-    expect(draft.missing).toEqual(['proteinG', 'carbsG', 'fibreG']);
+    expect(draft.nutrients).toEqual({ kcal: 450, proteinG: null, carbsG: null, fatG: 18, fibreG: null, sugarG: null });
+    expect(draft.missing).toEqual(['proteinG', 'carbsG', 'fibreG', 'sugarG']);
     expect(draft.brand).toBeNull();
   });
 
@@ -176,8 +176,8 @@ describe('Open Food Facts search', () => {
             servingSize: 41.5,
             packSize: null,
             imageUrl: kitkat.image_front_small_url,
-            nutrients: { kcal: 518, proteinG: 6.6, carbsG: 60, fatG: 27, fibreG: 2 },
-            missing: [],
+            nutrients: { kcal: 518, proteinG: 6.6, carbsG: 60, fatG: 27, fibreG: 2, sugarG: null },
+            missing: ['sugarG'],
           },
         },
       ],
@@ -312,5 +312,17 @@ describe('pack size', () => {
     expect(parseOffProduct(product({}))!.packSize).toBeNull();
     expect(parseOffProduct(product({ product_quantity: 0, product_quantity_unit: 'g' }))!.packSize).toBeNull();
     expect(parseOffProduct(product({ product_quantity: 6, product_quantity_unit: 'pieces' }))!.packSize).toBeNull();
+  });
+});
+
+describe('sugar', () => {
+  test('sugar per 100 g is read as a secondary nutrient', () => {
+    const draft = parseOffProduct({ product: { product_name: 'Maltesers', nutriments: { 'energy-kcal_100g': 498, sugars_100g: 52 } } })!;
+    expect(draft.nutrients.sugarG).toBe(52);
+  });
+
+  test('no sugar listed stays unknown', () => {
+    const draft = parseOffProduct({ product: { product_name: 'Oats', nutriments: { 'energy-kcal_100g': 379 } } })!;
+    expect(draft.nutrients.sugarG).toBeNull();
   });
 });

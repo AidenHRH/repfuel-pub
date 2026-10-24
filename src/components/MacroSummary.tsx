@@ -69,6 +69,11 @@ export function MacroSummary({ totals, targets }: Props) {
             </Text>
           </Text>
         </View>
+        {secondary(totals).length ? (
+          <Text variant="caption" color="text2" numeric>
+            {secondary(totals).join(' · ')}
+          </Text>
+        ) : null}
         {notes.length ? (
           <Text variant="caption" color="text2">
             {notes.join(' · ')}
@@ -99,4 +104,12 @@ function Metric(props: { label: string; value: string; target: string; remaining
       </Text>
     </View>
   );
+}
+
+/** "Fibre 6 g · Sugar 12 g": the secondary nutrients, each only when some entry knows it. */
+function secondary({ totals, known }: DayTotals): string[] {
+  return [
+    known.fibreG ? `Fibre ${roundForDisplay(totals.fibreG, 'g')} g` : null,
+    known.sugarG ? `Sugar ${roundForDisplay(totals.sugarG, 'g')} g` : null,
+  ].filter((x): x is string => x !== null);
 }

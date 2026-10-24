@@ -13,6 +13,7 @@ export type FoodFormValues = {
   carbs: string;
   fat: string;
   fibre: string;
+  sugar: string;
   approximate: boolean;
 };
 
@@ -29,6 +30,7 @@ export function emptyFoodForm(overrides: Partial<FoodFormValues> = {}): FoodForm
     carbs: '',
     fat: '',
     fibre: '',
+    sugar: '',
     approximate: false,
     ...overrides,
   };
@@ -40,7 +42,10 @@ export function emptyFoodForm(overrides: Partial<FoodFormValues> = {}): FoodForm
  */
 export function editedFood(original: FoodProduct, fromForm: NewFood): Partial<NewFood> {
   const sameNutrition =
-    original.basis === fromForm.basis && JSON.stringify(original.nutrients) === JSON.stringify(fromForm.nutrients);
+    original.basis === fromForm.basis &&
+    (Object.keys(NUTRIENT_LABELS) as (keyof Nutrients)[]).every(
+      (k) => (original.nutrients[k] ?? null) === (fromForm.nutrients[k] ?? null),
+    );
   // Unchanged values keep their source (e.g. Open Food Facts); edited ones become the owner's own.
   const dataSource =
     fromForm.dataSource === 'user_approximate'
@@ -72,6 +77,7 @@ export function formFromFood(food: FoodProduct): FoodFormValues {
     carbs: text(food.nutrients.carbsG),
     fat: text(food.nutrients.fatG),
     fibre: text(food.nutrients.fibreG),
+    sugar: text(food.nutrients.sugarG ?? null),
     approximate: food.dataSource === 'user_approximate',
   };
 }
@@ -84,7 +90,7 @@ export function validateFoodForm(values: FoodFormValues): { ok: true; food: NewF
   const errors: FoodFormErrors = {};
   if (!values.name.trim()) errors.name = 'Give it a name';
 
-  const read = (key: 'kcal' | 'protein' | 'carbs' | 'fat' | 'fibre' | 'servingSize', required: boolean) => {
+  const read = (key: 'kcal' | 'protein' | 'carbs' | 'fat' | 'fibre' | 'sugar' | 'servingSize', required: boolean) => {
     const parsed = parseAmount(values[key]);
     if (parsed === null) {
       if (required) errors[key] = 'Required';
@@ -102,6 +108,7 @@ export function validateFoodForm(values: FoodFormValues): { ok: true; food: NewF
   const carbsG = read('carbs', false);
   const fatG = read('fat', false);
   const fibreG = read('fibre', false);
+  const sugarG = read('sugar', false);
   const servingSize = read('servingSize', false);
   if (servingSize === 0) errors.servingSize = 'Enter a size above 0';
 
@@ -116,7 +123,7 @@ export function validateFoodForm(values: FoodFormValues): { ok: true; food: NewF
       basis: values.basis,
       servingSize,
       servingUnit: servingSize === null ? null : values.basis === 'per_100ml' ? 'ml' : 'g',
-      nutrients: { kcal, proteinG, carbsG, fatG, fibreG },
+      nutrients: { kcal, proteinG, carbsG, fatG, fibreG, sugarG },
       dataSource: values.approximate ? 'user_approximate' : 'manual',
       notes: null,
     },
@@ -129,6 +136,7 @@ const NUTRIENT_LABELS: Record<keyof Nutrients, string> = {
   carbsG: 'carbs',
   fatG: 'fat',
   fibreG: 'fibre',
+  sugarG: 'sugar',
 };
 
 /** Form values prefilled from a barcode lookup; anything the database didn't list stays blank. */
@@ -143,6 +151,7 @@ export function formFromDraft(draft: FoodDraft): FoodFormValues {
     carbs: text(draft.nutrients.carbsG),
     fat: text(draft.nutrients.fatG),
     fibre: text(draft.nutrients.fibreG),
+    sugar: text(draft.nutrients.sugarG ?? null),
   });
 }
 

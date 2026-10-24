@@ -86,6 +86,7 @@ export function parseOffProduct(json: unknown): FoodDraft | null {
     carbsG: num(n.carbohydrates_100g),
     fatG: num(n.fat_100g),
     fibreG: num(n.fiber_100g),
+    sugarG: num(n.sugars_100g),
   };
   const name = text(product.product_name) ?? text(product.product_name_en);
   const hasAnyNutrient = Object.values(nutrients).some((v) => v !== null);

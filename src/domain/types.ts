@@ -30,6 +30,8 @@ export type Nutrients = {
   carbsG: number | null;
   fatG: number | null;
   fibreG: number | null;
+  /** Secondary, shown when known. Optional: older snapshots and hand-made values don't have it (absent = unknown). */
+  sugarG?: number | null;
 };
 
 export type NutritionBasis = 'per_serving' | 'per_100g' | 'per_100ml';
@@ -59,6 +61,11 @@ export type FoodProduct = {
   presetId: string | null;
   /** Nutri-Score, processing and additives, for products from Open Food Facts. */
   health: HealthInfo | null;
+  /** The shop it's from ("Aldi"), when known; never required. */
+  shop: string | null;
+  /** One piece (a Malteser) in g or ml, and what to call it, for logging by the piece; null until asked. */
+  pieceG: number | null;
+  pieceLabel: string | null;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;

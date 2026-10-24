@@ -22,6 +22,7 @@ type Row = {
   carbs_g: number | null;
   fat_g: number | null;
   fibre_g: number | null;
+  sugar_g?: number | null;
   is_approximate: number;
   logged_at: string;
   local_day: string;
@@ -29,7 +30,7 @@ type Row = {
   notes: string | null;
 };
 
-const KEYS = ['kcal', 'proteinG', 'carbsG', 'fatG', 'fibreG'] as const;
+const KEYS = ['kcal', 'proteinG', 'carbsG', 'fatG', 'fibreG', 'sugarG'] as const;
 
 function toEntry(row: Row): FoodLogEntry {
   return {
@@ -39,7 +40,7 @@ function toEntry(row: Row): FoodLogEntry {
     name: row.food_name_snapshot,
     amount: row.amount,
     unit: row.unit,
-    nutrients: { kcal: row.kcal, proteinG: row.protein_g, carbsG: row.carbs_g, fatG: row.fat_g, fibreG: row.fibre_g },
+    nutrients: { kcal: row.kcal, proteinG: row.protein_g, carbsG: row.carbs_g, fatG: row.fat_g, fibreG: row.fibre_g, sugarG: row.sugar_g ?? null },
     isApproximate: row.is_approximate === 1,
     loggedAt: row.logged_at,
     localDay: row.local_day,
@@ -50,7 +51,7 @@ function toEntry(row: Row): FoodLogEntry {
 
 function scale(n: Nutrients, factor: number): Nutrients {
   const out = { ...n };
-  for (const key of KEYS) out[key] = n[key] === null ? null : n[key]! * factor;
+  for (const key of KEYS) out[key] = (n[key] ?? null) === null ? null : n[key]! * factor;
   return out;
 }
 
@@ -95,6 +96,7 @@ async function insert(db: Db, entry: FoodLogEntry): Promise<void> {
       now,
     ],
   );
+  if (n.sugarG != null) await db.run('UPDATE food_log_entry SET sugar_g = ? WHERE id = ?', [n.sugarG, entry.id]);
 }
 
 /**
@@ -189,6 +191,7 @@ export async function updateEntry(
       id,
     ],
   );
+  await db.run('UPDATE food_log_entry SET sugar_g = ? WHERE id = ?', [n.sugarG ?? null, id]);
   return (await getEntry(db, id))!;
 }
 

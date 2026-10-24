@@ -116,6 +116,17 @@ export function FoodFormView({ values, errors, onChange, quick }: Props) {
             error={errors.fibre}
           />
         )}
+        {quick ? null : (
+          <TextField
+            label="Sugar"
+            value={values.sugar}
+            onChangeText={set('sugar')}
+            keyboardType="decimal-pad"
+            placeholder="Optional"
+            suffix="g"
+            error={errors.sugar}
+          />
+        )}
       </ListGroup>
 
       <ListGroup footer="Estimates are shown with ≈ wherever they count towards your totals.">

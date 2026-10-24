@@ -168,3 +168,35 @@ describe('quickPicks', () => {
     expect(await quickPicks(db, now)).toEqual([]);
   });
 });
+
+test('sugar is snapshotted like the other nutrients, unknown when the food has none', async () => {
+  const db = await migratedDb();
+  const sweets = await createFood(db, {
+    name: 'Jelly sweets',
+    brand: null,
+    barcode: null,
+    basis: 'per_100g',
+    servingSize: null,
+    servingUnit: null,
+    nutrients: { kcal: 340, proteinG: 6, carbsG: 77, fatG: 0, fibreG: 0, sugarG: 10 },
+    dataSource: 'manual',
+    notes: null,
+  });
+  const plain = await createFood(db, {
+    name: 'Plain rice',
+    brand: null,
+    barcode: null,
+    basis: 'per_100g',
+    servingSize: null,
+    servingUnit: null,
+    nutrients: { kcal: 130, proteinG: 2.7, carbsG: 28, fatG: 0.3, fibreG: 0.4 },
+    dataSource: 'manual',
+    notes: null,
+  });
+  const a = await logLoggable(db, { kind: 'food', id: sweets.id }, 50, at('2026-10-21T15:00:00Z'));
+  const b = await logLoggable(db, { kind: 'food', id: plain.id }, 100, at('2026-10-21T18:00:00Z'));
+  expect(a.nutrients.sugarG).toBeCloseTo(5, 10);
+  expect(b.nutrients.sugarG).toBeNull();
+  const [first] = await entriesForDay(db, '2026-10-21');
+  expect(first.nutrients.sugarG).toBeCloseTo(5, 10);
+});

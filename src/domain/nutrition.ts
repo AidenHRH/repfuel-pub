@@ -1,6 +1,6 @@
 import type { Nutrients, NutritionBasis } from './types';
 
-const KEYS = ['kcal', 'proteinG', 'carbsG', 'fatG', 'fibreG'] as const;
+const KEYS = ['kcal', 'proteinG', 'carbsG', 'fatG', 'fibreG', 'sugarG'] as const;
 type NutrientKey = (typeof KEYS)[number];
 
 export type LoggedAmount = { servings: number } | { quantity: number; unit: 'g' | 'ml' };
@@ -8,6 +8,8 @@ export type LoggedAmount = { servings: number } | { quantity: number; unit: 'g' 
 function scale(nutrients: Nutrients, factor: number): Nutrients {
   const out = {} as Nutrients;
   for (const key of KEYS) {
+    // A nutrient the input never had (older snapshots have no sugar) stays absent.
+    if (nutrients[key] === undefined) continue;
     const value = nutrients[key];
     out[key] = value === null ? null : value * factor;
   }
@@ -38,26 +40,32 @@ export type DayTotals = {
   totals: Record<NutrientKey, number>;
   /** True when at least one entry's value for that nutrient is unknown. */
   incomplete: Record<NutrientKey, boolean>;
+  /** True when at least one entry's value for that nutrient is known (secondary nutrients show only then). */
+  known: Record<NutrientKey, boolean>;
   /** True when at least one entry is the owner's own estimate. */
   approximate: boolean;
 };
 
 /** Sums stored entry values at full precision. Round only for display. */
 export function sumEntries(entries: (Nutrients & { isApproximate: boolean })[]): DayTotals {
-  const totals = { kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, fibreG: 0 };
-  const incomplete = { kcal: false, proteinG: false, carbsG: false, fatG: false, fibreG: false };
+  const totals = { kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, fibreG: 0, sugarG: 0 };
+  const incomplete = { kcal: false, proteinG: false, carbsG: false, fatG: false, fibreG: false, sugarG: false };
+  const known = { kcal: false, proteinG: false, carbsG: false, fatG: false, fibreG: false, sugarG: false };
   let approximate = false;
 
   for (const entry of entries) {
     if (entry.isApproximate) approximate = true;
     for (const key of KEYS) {
-      const value = entry[key];
+      const value = entry[key] ?? null;
       if (value === null) incomplete[key] = true;
-      else totals[key] += value;
+      else {
+        totals[key] += value;
+        known[key] = true;
+      }
     }
   }
 
-  return { totals, incomplete, approximate };
+  return { totals, incomplete, known, approximate };
 }
 
 const wholeNumber = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 });

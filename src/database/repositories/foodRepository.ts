@@ -20,6 +20,10 @@ type Row = {
   carbs_g: number | null;
   fat_g: number | null;
   fibre_g: number | null;
+  sugar_g?: number | null;
+  shop?: string | null;
+  piece_g?: number | null;
+  piece_label?: string | null;
   data_source: DataSource;
   notes: string | null;
   image_url: string | null;
@@ -54,13 +58,16 @@ function toFood(row: Row): FoodProduct {
     servingSize: row.serving_size,
     servingUnit: row.serving_unit,
     packSize: row.pack_size ?? null,
-    nutrients: { kcal: row.kcal, proteinG: row.protein_g, carbsG: row.carbs_g, fatG: row.fat_g, fibreG: row.fibre_g },
+    nutrients: { kcal: row.kcal, proteinG: row.protein_g, carbsG: row.carbs_g, fatG: row.fat_g, fibreG: row.fibre_g, sugarG: row.sugar_g ?? null },
     dataSource: row.data_source,
     isFavourite: row.is_favourite === 1,
     notes: row.notes,
     imageUrl: row.image_url ?? null,
     presetId: row.preset_id ?? null,
     health: healthOf(row),
+    shop: row.shop ?? null,
+    pieceG: row.piece_g ?? null,
+    pieceLabel: row.piece_label ?? null,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -69,8 +76,22 @@ function toFood(row: Row): FoodProduct {
 
 export type NewFood = Omit<
   FoodProduct,
-  'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'isFavourite' | 'imageUrl' | 'presetId' | 'health' | 'packSize'
+  | 'id'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'deletedAt'
+  | 'isFavourite'
+  | 'imageUrl'
+  | 'presetId'
+  | 'health'
+  | 'packSize'
+  | 'shop'
+  | 'pieceG'
+  | 'pieceLabel'
 > & {
+  shop?: string | null;
+  pieceG?: number | null;
+  pieceLabel?: string | null;
   packSize?: number | null;
   isFavourite?: boolean;
   imageUrl?: string | null;
@@ -113,6 +134,14 @@ export async function createFood(db: Db, input: NewFood): Promise<FoodProduct> {
   );
   // Written only when known, so the insert above stays the same as before pack sizes (tests build older databases).
   if (input.packSize) await db.run('UPDATE food_product SET pack_size = ? WHERE id = ?', [input.packSize, id]);
+  if (n.sugarG != null || input.shop || input.pieceG)
+    await db.run('UPDATE food_product SET sugar_g = ?, shop = ?, piece_g = ?, piece_label = ? WHERE id = ?', [
+      n.sugarG ?? null,
+      input.shop ?? null,
+      input.pieceG ?? null,
+      input.pieceG ? (input.pieceLabel ?? null) : null,
+      id,
+    ]);
   return (await getFood(db, id))!;
 }
 
@@ -155,6 +184,13 @@ export async function updateFood(db: Db, id: string, patch: Partial<NewFood>): P
       id,
     ],
   );
+  await db.run('UPDATE food_product SET sugar_g = ?, shop = ?, piece_g = ?, piece_label = ? WHERE id = ?', [
+    n.sugarG ?? null,
+    next.shop ?? null,
+    next.pieceG ?? null,
+    next.pieceG ? (next.pieceLabel ?? null) : null,
+    id,
+  ]);
   return (await getFood(db, id))!;
 }
 

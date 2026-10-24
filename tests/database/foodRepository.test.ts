@@ -18,7 +18,16 @@ test('a created food round-trips every field, keeping unknown values unknown', a
   const db = await migratedDb();
   const created = await createFood(db, wheyInput);
   expect(await getFood(db, created.id)).toEqual(
-    expect.objectContaining({ ...wheyInput, isFavourite: false, deletedAt: null, id: created.id }),
+    expect.objectContaining({
+      ...wheyInput,
+      nutrients: { ...wheyInput.nutrients, sugarG: null },
+      shop: null,
+      pieceG: null,
+      pieceLabel: null,
+      isFavourite: false,
+      deletedAt: null,
+      id: created.id,
+    }),
   );
 });
 

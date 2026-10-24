@@ -12,7 +12,7 @@ test('blank optional values stay unknown', () => {
   const result = validateFoodForm(base);
   expect(result.ok).toBe(true);
   if (result.ok) {
-    expect(result.food.nutrients).toEqual({ kcal: 650, proteinG: 40, carbsG: null, fatG: null, fibreG: null });
+    expect(result.food.nutrients).toEqual({ kcal: 650, proteinG: 40, carbsG: null, fatG: null, fibreG: null, sugarG: null });
     expect(result.food.basis).toBe('per_serving');
   }
 });

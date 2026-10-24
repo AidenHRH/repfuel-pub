@@ -343,7 +343,7 @@ export function templateNutrients(t: MealTemplate): Nutrients {
     const f = getCommonFood(food);
     if (!f) throw new Error(`Unknown common food: ${food}`);
     for (const key of Object.keys(total) as (keyof Nutrients)[]) {
-      const v = f.per100[key];
+      const v = f.per100[key] ?? null;
       total[key] = total[key] === null || v === null ? null : total[key]! + (v * grams) / 100;
     }
   }

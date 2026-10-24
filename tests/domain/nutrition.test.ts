@@ -99,7 +99,7 @@ describe('sumEntries', () => {
 
   test('no entries gives zero totals that are complete and exact', () => {
     const day = sumEntries([]);
-    expect(day.totals).toEqual({ kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, fibreG: 0 });
+    expect(day.totals).toEqual({ kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, fibreG: 0, sugarG: 0 });
     expect(Object.values(day.incomplete).some(Boolean)).toBe(false);
     expect(day.approximate).toBe(false);
   });

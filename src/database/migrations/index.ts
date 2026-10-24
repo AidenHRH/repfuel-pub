@@ -18,6 +18,7 @@ import { assistedReps } from './015_assisted_reps';
 import { exerciseVideo } from './016_exercise_video';
 import { recipePhoto } from './017_recipe_photo';
 import { setupDone } from './018_setup_done';
+import { foodExtras } from './019_food_extras';
 
 export type Migration = {
   version: number;
@@ -45,4 +46,5 @@ export const allMigrations: Migration[] = [
   exerciseVideo,
   recipePhoto,
   setupDone,
+  foodExtras,
 ];
