@@ -93,8 +93,17 @@ Design: `docs/superpowers/specs/2026-10-22-redesign-coaching-health-design.md`; 
   hold an item to log it again today in any meal, Daily habits (creatine, the day's sessions, Log workout); workouts
   as sessions (a gap over an hour starts a new one, named from its muscles, e.g. "12:20 · Shoulders"; tap for its
   sets; hold a lift to move it); Shuffle no longer offers a saved copy of a planned dish as a new dish.
-- Next (0.24 → 0.26, same design): logging step by step with a basket, real photos, shops and takeaways; goals,
-  rewards and a weekly review; meal planning on TheMealDB with honest macros and Gousto-style filters.
+- Done (0.24): logging step by step (same design): Log food guesses the meal from the time (dinner until 22:00),
+  with pills to change it; a basket ("Your lunch · 2 items" with photos, the meal's totals and what's left for the
+  day, + Add a drink, + Add a snack, Log N items; closing asks Keep or Remove); scan a meal's packs one after another
+  (each opens its amount and comes back to the scanner); by the piece ("4 Maltesers", asked once: how much one
+  weighs or how many in the pack); photos on Summary, search and the basket (packs, built-in foods, a letter tile
+  otherwise); shops from Open Food Facts or own brands (Ashfield Farm → Aldi), "Where's this from?" with Skip, never
+  required, editable on the food; search with your foods first ("You had this Tuesday") and each shop's version;
+  Recent at the meal; takeaway estimates (Chinese, Indian, Pizza, Chippy, Kebab, Burger, Italian, Thai; half,
+  regular, large, pizza by the slice, marked ≈); fibre and sugar under the macros when known.
+- Next (0.25 → 0.26, same design): goals, rewards and a weekly review; meal planning on TheMealDB with honest macros
+  and Gousto-style filters.
 - Then: Health Connect with a Health screen
   (smart scales, fitness trackers, running apps), then plans and coaching inside your training split.
 - Owner request (2026-10-22), being designed: meal prep as a recipe browser, "like Gousto but our own": browse
