@@ -51,7 +51,16 @@ export function DayDot({ stage, mealsDone, size = 30 }: { stage: DayStage; meals
   }
   return (
     <Svg width={size} height={size}>
-      <Circle cx={c} cy={c} r={r} stroke={colors.text2} strokeOpacity={0.55} strokeWidth={1.5} strokeDasharray="3 3" fill="none" />
+      <Circle
+        cx={c}
+        cy={c}
+        r={r}
+        stroke={colors.text2}
+        strokeOpacity={0.55}
+        strokeWidth={1.5}
+        strokeDasharray="3 3"
+        fill="none"
+      />
     </Svg>
   );
 }

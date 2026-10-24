@@ -2,7 +2,7 @@
   "expo": {
     "name": "RepFuel",
     "slug": "repfuel",
-    "version": "0.24.0-stage24",
+    "version": "0.24.1-stage25",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "repfuel",

@@ -2,7 +2,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { Button } from '@/components/Button';
 import { WorkoutsIcon } from '@/components/icons';
 import { Text } from '@/components/Text';
 import { useDb } from '@/database/DatabaseProvider';
@@ -42,63 +41,78 @@ export function DailyHabits({ day, isToday }: { day: string; isToday: boolean })
     };
   }, [db, day, version]);
 
+  const rows = [
+    isToday ? <TodayReminder key="creatine" row /> : null,
+    ...sessions.map((s) => {
+      const detail =
+        s.kind === 'strength'
+          ? `${s.exercises} exercise${s.exercises === 1 ? '' : 's'} · ${s.sets} set${s.sets === 1 ? '' : 's'}`
+          : s.items[0].kind === 'class'
+            ? durationLabel(s.items[0].session.durationMin)
+            : '';
+      const tail = s.prs ? ` · ${s.prs} PR${s.prs === 1 ? '' : 's'}` : s.effort !== null ? ` · effort ${s.effort}` : '';
+      return (
+        <Pressable
+          key={s.id}
+          accessibilityRole="button"
+          accessibilityLabel={`${localTimeLabel(s.start)} · ${s.name}, ${detail}${s.effort !== null ? `, effort ${s.effort}` : ''}${s.prs ? `, ${s.prs} PR` : ''}`}
+          onPress={() => router.push(s.kind === 'strength' ? `/session/${s.id}` : `/class/${s.id}`)}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.md,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            backgroundColor: pressed ? colors.well : colors.card,
+          })}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ fontFamily: fonts.semibold }} numeric>{`${localTimeLabel(s.start)} · ${s.name}`}</Text>
+            <Text variant="caption" numeric style={{ color: s.prs ? colors.up : colors.text2 }}>
+              {`${detail}${tail}`}
+            </Text>
+          </View>
+          <Text variant="headline" color="accent">
+            ›
+          </Text>
+        </Pressable>
+      );
+    }),
+    isToday ? (
+      <TourTarget key="log-workout" id="log-workout-pill">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Log workout"
+          onPress={() => router.push('/lift/new?from=today')}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing.sm,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            backgroundColor: pressed ? colors.well : colors.card,
+          })}>
+          <WorkoutsIcon color={colors.accent} size={18} />
+          <Text color="accent" style={{ fontFamily: fonts.semibold }}>
+            Log workout
+          </Text>
+        </Pressable>
+      </TourTarget>
+    ) : null,
+  ].filter(Boolean);
+
+  if (rows.length === 0) return null;
   return (
-    <View style={{ gap: spacing.sm }}>
-      <Text variant="overline" color="text2" accessibilityRole="header" style={{ paddingHorizontal: spacing.xs }}>
+    <View style={{ gap: spacing.md }}>
+      <Text variant="title" accessibilityRole="header">
         Daily habits
       </Text>
-      {isToday ? <TodayReminder /> : null}
-      {sessions.length ? (
-        <View style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
-          {sessions.map((s, i) => {
-            const detail =
-              s.kind === 'strength'
-                ? `${s.exercises} exercise${s.exercises === 1 ? '' : 's'} · ${s.sets} set${s.sets === 1 ? '' : 's'}`
-                : s.items[0].kind === 'class'
-                  ? durationLabel(s.items[0].session.durationMin)
-                  : '';
-            return (
-              <Pressable
-                key={s.id}
-                accessibilityRole="button"
-                accessibilityLabel={`${localTimeLabel(s.start)} · ${s.name}, ${detail}${s.effort !== null ? `, effort ${s.effort}` : ''}`}
-                onPress={() => router.push(s.kind === 'strength' ? `/session/${s.id}` : `/class/${s.id}`)}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.md,
-                  paddingHorizontal: spacing.lg,
-                  paddingVertical: spacing.md,
-                  borderTopWidth: i === 0 ? 0 : 1,
-                  borderTopColor: colors.sep,
-                  backgroundColor: pressed ? colors.well : colors.card,
-                })}>
-                <WorkoutsIcon color={colors.accent} size={20} />
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={{ fontFamily: fonts.semibold }} numeric>{`${localTimeLabel(s.start)} · ${s.name}`}</Text>
-                  <Text variant="caption" color="text2" numeric>
-                    {detail}
-                  </Text>
-                </View>
-                {s.effort !== null ? (
-                  <Text variant="caption" color="text2" numeric>{`effort ${s.effort}`}</Text>
-                ) : null}
-                <Text color="text2">›</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
-      {isToday ? (
-        <TourTarget id="log-workout-pill">
-          <Button
-            variant="secondary"
-            label="Log workout"
-            onPress={() => router.push('/lift/new?from=today')}
-            icon={<WorkoutsIcon color={colors.accent} size={20} />}
-          />
-        </TourTarget>
-      ) : null}
+      <View style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
+        {rows.map((row, i) => (
+          <View key={i} style={{ borderTopWidth: i === 0 ? 0 : 1, borderTopColor: colors.well }}>
+            {row}
+          </View>
+        ))}
+      </View>
     </View>
   );
 }

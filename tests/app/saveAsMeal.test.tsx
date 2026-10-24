@@ -39,7 +39,7 @@ test('a logged quick meal can be saved as a meal from its entry', async () => {
   expect(screen.queryByRole('button', { name: 'Save as a meal' })).toBeNull();
 
   await fireEvent.press(screen.getByRole('button', { name: 'Done' }));
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   await fireEvent.press(screen.getByRole('button', { name: 'Log food' }));
   await fireEvent.press(await screen.findByRole('button', { name: 'Saved meals' }));
   expect(await screen.findByRole('button', { name: 'Log 1 portion of Gousto katsu' })).toBeTruthy();

@@ -66,7 +66,7 @@ test('Settings: Show the tour again starts the tour on Summary', async () => {
   await renderRouter(appDir, { initialUrl: '/settings' });
   await fireEvent.press(await screen.findByRole('button', { name: 'Show the tour again' }));
   expect(await screen.findByText('1 of 8')).toBeTruthy();
-  expect(screen.getByRole('header', { name: 'Summary' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Choose a day/ })).toBeTruthy();
 });
 
 test('Settings: turning Helpful tips off stops them; off and on again lets seen tips come back', async () => {

@@ -89,7 +89,7 @@ test('closing with items asks whether to keep them', async () => {
     await buttons.find((b) => b.text === 'Remove')!.onPress!();
   });
   expect(await entriesForDay(mockDb, '2026-10-22')).toEqual([]);
-  expect(await screen.findByRole('header', { name: 'Summary' })).toBeTruthy();
+  expect(await screen.findByRole('button', { name: /^Choose a day/ })).toBeTruthy();
 });
 
 test('Keep leaves them logged', async () => {

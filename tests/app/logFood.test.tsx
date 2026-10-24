@@ -21,7 +21,7 @@ afterEach(() => jest.useRealTimers());
 
 async function openLogFood() {
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   await fireEvent.press(screen.getByRole('button', { name: 'Log food' }));
   await screen.findByRole('header', { name: 'Log food' });
 }
@@ -99,7 +99,7 @@ test('search finds saved meals and + logs them', async () => {
   await finishBasket();
   expect(await screen.findByLabelText('Calories 451 of 2,500. Protein 37 of 145 grams.')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Dinner' })).toBeTruthy();
-  expect(screen.getByText('18:30')).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Beef & sweet potato, 18:30/ })).toBeTruthy();
 });
 
 test('a per-100 g food asks how much before logging', async () => {

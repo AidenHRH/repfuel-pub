@@ -50,7 +50,7 @@ test('a fresh install walks the 8 stops, ends on Summary, and logs nothing', asy
   }
   await act(async () => jest.advanceTimersByTime(500));
   expect(screen.queryByLabelText('Tour')).toBeNull();
-  expect(screen.getByRole('header', { name: 'Summary' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Choose a day/ })).toBeTruthy();
   expect(await entriesForDay(mockDb, '2026-10-23')).toEqual([]);
   expect((await getTourState(mockDb)).doneAt).toMatch(/^2026-10-23T08:/);
 });
@@ -68,7 +68,7 @@ test('the product stops show a banana, and Skip tour closes everything without l
   await act(async () => jest.advanceTimersByTime(500));
   expect(screen.queryByLabelText('Tour')).toBeNull();
   expect(screen.queryByRole('header', { name: 'Banana' })).toBeNull();
-  expect(screen.getByRole('header', { name: 'Summary' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Choose a day/ })).toBeTruthy();
   expect(await entriesForDay(mockDb, '2026-10-23')).toEqual([]);
   expect((await getTourState(mockDb)).doneAt).not.toBeNull();
 });

@@ -54,7 +54,7 @@ test('Today shows creatine once it is on; tick it off, and untick a mistake', as
   await openSettings();
   await fireEvent(await screen.findByLabelText('Creatine reminder'), 'valueChange', true);
   await fireEvent.press(screen.getByLabelText(/^Summary, tab/));
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
 
   await fireEvent.press(await screen.findByRole('button', { name: 'Mark creatine taken' }));
   expect(await screen.findByText('5 g today')).toBeTruthy();
@@ -67,7 +67,7 @@ test('Today shows creatine once it is on; tick it off, and untick a mistake', as
 
 test('Today shows nothing for a reminder that is off', async () => {
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   expect(screen.queryByRole('button', { name: 'Mark creatine taken' })).toBeNull();
 });
 
@@ -81,7 +81,7 @@ test('how much creatine: 10 g a day in 2.5 g scoops, half now and the rest with 
   expect(await getCreatineSettings(mockDb)).toEqual({ dailyG: 10, scoopG: 2.5 });
 
   await fireEvent.press(screen.getByLabelText(/^Summary, tab/));
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   await fireEvent.press(await screen.findByRole('button', { name: 'Choose how much creatine' }));
   await screen.findByRole('header', { name: 'How much creatine?' });
   await fireEvent.press(screen.getByRole('button', { name: '5 g · 2 scoops' }));

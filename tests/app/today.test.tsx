@@ -17,7 +17,7 @@ const appDir = path.resolve(__dirname, '../../src/app');
 
 async function openToday() {
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
 }
 
 /** Saved meals are two taps away: Log food, then Saved meals. */
@@ -43,7 +43,7 @@ afterEach(() => jest.useRealTimers());
 test('starts from real, empty totals with your saved meals ready', async () => {
   await openToday();
   expect(await screen.findByLabelText(ring('0', '0'))).toBeTruthy();
-  expect(screen.getByText('2,500 kcal left')).toBeTruthy();
+  expect(screen.getByText('2,500 left')).toBeTruthy();
   expect(screen.getByText('Nothing logged yet today')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Log food' }));
   await fireEvent.press(await screen.findByRole('button', { name: 'Saved meals' }));
@@ -57,8 +57,8 @@ test('one tap logs a saved meal, updates totals and offers Undo', async () => {
   expect(await screen.findByLabelText(ring('404', '37'))).toBeTruthy();
   expect(screen.getByText('Logged Overnight oats')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Breakfast' })).toBeTruthy();
-  expect(screen.getByText('404 kcal · 37 g')).toBeTruthy();
-  expect(screen.getByText('08:30')).toBeTruthy();
+  expect(screen.getByText('· 404 kcal · 37 g protein')).toBeTruthy();
+  expect(screen.getByRole('button', { name: /^Overnight oats, 08:30/ })).toBeTruthy();
 
   await fireEvent.press(screen.getByRole('button', { name: 'Undo' }));
   expect(await screen.findByLabelText(ring('0', '0'))).toBeTruthy();
@@ -159,6 +159,8 @@ test('swiping a row shows Edit and Delete buttons', async () => {
   await openToday();
   await logFromLogFood('Log 1 portion of Overnight oats');
   await act(async () => jest.advanceTimersByTime(5000));
+  // View diary lists every item, each with swipe actions.
+  await fireEvent.press(screen.getByRole('button', { name: 'View diary' }));
   await fireEvent.press(await screen.findByRole('button', { name: 'Delete Overnight oats' }));
   expect(await screen.findByText('Deleted Overnight oats')).toBeTruthy();
 });

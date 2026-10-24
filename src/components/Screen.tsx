@@ -8,7 +8,9 @@ import { layout, spacing } from '@/theme/tokens';
 import { Text } from './Text';
 
 type Props = {
-  title: string;
+  title?: string;
+  /** Replaces the large title row (Summary's "Today ▾"). */
+  header?: ReactNode;
   /** Small uppercase line above the title, e.g. today's date. */
   overline?: string;
   /** A quiet line under the title, e.g. the day's motivation. */
@@ -20,7 +22,7 @@ type Props = {
   children: ReactNode;
 };
 
-export function Screen({ title, overline, subtitle, accessory, bottomInset = 0, children }: Props) {
+export function Screen({ title, header, overline, subtitle, accessory, bottomInset = 0, children }: Props) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -34,19 +36,21 @@ export function Screen({ title, overline, subtitle, accessory, bottomInset = 0, 
         gap: spacing.section,
       }}
       showsVerticalScrollIndicator={false}>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-        <View style={{ gap: 2, flexShrink: 1 }}>
-          {overline ? (
-            <Text variant="overline" color="text2">
-              {overline}
+      {header ?? (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <View style={{ gap: 2, flexShrink: 1 }}>
+            {overline ? (
+              <Text variant="overline" color="text2">
+                {overline}
+              </Text>
+            ) : null}
+            <Text variant="largeTitle" accessibilityRole="header">
+              {title}
             </Text>
-          ) : null}
-          <Text variant="largeTitle" accessibilityRole="header">
-            {title}
-          </Text>
+          </View>
+          {accessory}
         </View>
-        {accessory}
-      </View>
+      )}
       {subtitle ? (
         <Text variant="callout" color="text2" style={{ marginTop: -spacing.section + spacing.sm }}>
           {subtitle}

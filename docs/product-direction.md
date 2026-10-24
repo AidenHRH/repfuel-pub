@@ -102,6 +102,10 @@ Design: `docs/superpowers/specs/2026-10-22-redesign-coaching-health-design.md`; 
   required, editable on the food; search with your foods first ("You had this Tuesday") and each shop's version;
   Recent at the meal; takeaway estimates (Chinese, Indian, Pizza, Chippy, Kebab, Burger, Italian, Thai; half,
   regular, large, pizza by the slice, marked ≈); fibre and sugar under the macros when known.
+- Done (0.24.1): Summary laid out as the approved mockup: "Today ▾" title with the streak pill, a calories card with
+  its bar, a protein / carbs / fat card, each meal as a card (totals, photo tiles, Log; the planned dish with a
+  one-tap Log; Drinks "on their own"), View diary for every item with swipe actions, Daily habits as one card
+  (creatine "+ 5 g", the day's sessions, Log workout) and a round + button.
 - Next (0.25 → 0.26, same design): goals, rewards and a weekly review; meal planning on TheMealDB with honest macros
   and Gousto-style filters.
 - Then: Health Connect with a Health screen

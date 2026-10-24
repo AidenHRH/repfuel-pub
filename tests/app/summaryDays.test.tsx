@@ -50,7 +50,7 @@ afterEach(() => jest.useRealTimers());
 
 async function openSummary() {
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
 }
 
 test('the week’s dots show each day’s stage, with the streak beside Today', async () => {

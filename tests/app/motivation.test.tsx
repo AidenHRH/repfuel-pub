@@ -24,6 +24,6 @@ test('Today shows the day’s line, and Settings can hide it', async () => {
   await fireEvent.press(screen.getByLabelText(/^Settings, tab/));
   await fireEvent(await screen.findByLabelText('Daily motivation'), 'valueChange', false);
   await fireEvent.press(screen.getByLabelText(/^Summary, tab/));
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   expect(screen.queryByText(lineForDay('2026-10-22'))).toBeNull();
 });

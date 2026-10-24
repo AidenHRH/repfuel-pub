@@ -38,9 +38,9 @@ test('tapping Undo twice after deleting an entry restores it once, without an er
   const alert = jest.spyOn(Alert, 'alert');
   const entry = await logLoggable(mockDb, { kind: 'recipe', id: seeded.overnightOats.id }, 1);
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
-  const rows = await screen.findAllByText(entry.name);
-  await fireEvent.press(rows[rows.length - 1]); // the entry under Food today
+  await screen.findByRole('button', { name: /^Choose a day/ });
+  // The entry's photo tile on its meal's card.
+  await fireEvent.press(await screen.findByRole('button', { name: new RegExp(`^${entry.name}, `) }));
   await fireEvent.press(await screen.findByRole('button', { name: 'Delete entry' }));
   const undo = await screen.findByRole('button', { name: 'Undo' });
 

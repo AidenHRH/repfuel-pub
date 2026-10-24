@@ -10,7 +10,7 @@ const appDir = path.resolve(__dirname, '../../src/app');
 async function renderApp() {
   await renderRouter(appDir, { initialUrl: '/' });
   // The root layout waits for fonts before rendering anything.
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
 }
 
 describe('tab navigation', () => {
@@ -28,7 +28,7 @@ describe('tab navigation', () => {
     await renderApp();
 
     expect(await screen.findByText('Nothing logged yet today')).toBeTruthy();
-    expect(screen.getByText('2,500 kcal left')).toBeTruthy();
+    expect(screen.getByText('2,500 left')).toBeTruthy();
     expect(screen.getByLabelText('Calories 0 of 2,500. Protein 0 of 145 grams.')).toBeTruthy();
   });
 

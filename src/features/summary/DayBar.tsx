@@ -19,11 +19,13 @@ type Props = {
   /** The weeks the picker offers, oldest first, seven days each (Monday first). */
   weeks: DaySummary[][];
   streak: number;
+  /** The day's motivation line, under the title (Settings can turn it off). */
+  line?: string;
   onPick: (day: string) => void;
 };
 
 /** "Today ▾" with the streak, then the week's dots; the picker and the week view open from here. */
-export function DayBar({ day, today, weeks, streak, onPick }: Props) {
+export function DayBar({ day, today, weeks, streak, line, onPick }: Props) {
   const { colors } = useTheme();
   const [sheet, setSheet] = useState<'pick' | 'week' | null>(null);
   const week = weeks.find((w) => w.some((s) => s.day === day)) ?? weeks[weeks.length - 1];
@@ -40,31 +42,20 @@ export function DayBar({ day, today, weeks, streak, onPick }: Props) {
           accessibilityLabel={`Choose a day, showing ${dayTitle(day, today)}`}
           onPress={() => setSheet('pick')}
           hitSlop={8}
-          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, opacity: pressed ? 0.6 : 1 })}>
-          <Text variant="headline">{dayTitle(day, today)}</Text>
-          <Text variant="caption" color="text2">
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            flexShrink: 1,
+            opacity: pressed ? 0.6 : 1,
+          })}>
+          <Text variant="largeTitle" numberOfLines={1} style={{ flexShrink: 1 }}>
+            {dayTitle(day, today)}
+          </Text>
+          <Text variant="headline" color="text2">
             ▾
           </Text>
         </Pressable>
-        {streak > 0 ? (
-          <View
-            accessible
-            accessibilityLabel={`${streak}-day streak`}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 3,
-              paddingHorizontal: spacing.sm,
-              paddingVertical: 3,
-              borderRadius: radii.pill,
-              backgroundColor: colors.well,
-            }}>
-            <FlameIcon color={colors.accent} size={14} />
-            <Text variant="caption" numeric style={{ fontFamily: fonts.semibold }}>
-              {String(streak)}
-            </Text>
-          </View>
-        ) : null}
         <View style={{ flex: 1 }} />
         {day !== today ? (
           <Pressable accessibilityRole="button" accessibilityLabel="Back to today" hitSlop={8} onPress={() => onPick(today)}>
@@ -73,7 +64,32 @@ export function DayBar({ day, today, weeks, streak, onPick }: Props) {
             </Text>
           </Pressable>
         ) : null}
+        {streak > 0 ? (
+          <View
+            accessible
+            accessibilityLabel={`${streak}-day streak`}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.sm,
+              borderRadius: radii.pill,
+              backgroundColor: colors.card,
+            }}>
+            <FlameIcon color={colors.kcal} size={15} />
+            <Text variant="callout" numeric style={{ fontFamily: fonts.semibold, color: colors.kcal }}>
+              {`${streak}-day streak`}
+            </Text>
+          </View>
+        ) : null}
       </View>
+
+      {line ? (
+        <Text variant="callout" color="text2" style={{ marginTop: -spacing.sm }}>
+          {line}
+        </Text>
+      ) : null}
 
       {week ? (
         <View style={{ gap: spacing.xs }}>
@@ -149,7 +165,7 @@ function DotRow({
             <Text variant="micro" color={s.day === today ? 'accent' : 'text2'} style={{ fontFamily: fonts.semibold }}>
               {numbers ? String(Number(s.day.slice(8))) : WEEKDAY_LETTERS[i]}
             </Text>
-            <DayDot stage={s.status.stage} mealsDone={s.status.mealsDone} size={numbers ? 26 : 30} />
+            <DayDot stage={s.status.stage} mealsDone={s.status.mealsDone} size={numbers ? 26 : 36} />
           </Pressable>
         );
       })}

@@ -39,6 +39,6 @@ test('a bag with a known size: half the pack is 150 g of a 300 g pack', async ()
   expect(screen.getByText('150 g of a 300 g pack')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Log 150 g · 780 kcal' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   expect((await entriesForDay(mockDb, '2026-10-22'))[0]).toMatchObject({ amount: 150, unit: 'g' });
 });

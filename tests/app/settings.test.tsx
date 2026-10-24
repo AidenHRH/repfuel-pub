@@ -25,7 +25,7 @@ beforeEach(() => {
 
 async function openSettings() {
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   await fireEvent.press(screen.getByLabelText(/^Settings, tab/));
   await screen.findByRole('header', { name: 'Settings' });
 }

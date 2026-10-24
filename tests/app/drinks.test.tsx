@@ -44,7 +44,7 @@ test('a drink with no size of its own: cans, glasses and bottles, logged under D
   await fireEvent(screen.getByLabelText('Add to Drinks'), 'valueChange', true);
   await fireEvent.press(screen.getByRole('button', { name: 'Log 660 ml · 277 kcal' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   expect(await screen.findByRole('header', { name: 'Drinks' })).toBeTruthy();
   expect((await entriesForDay(mockDb, '2026-10-22'))[0]).toMatchObject({ mealCategory: 'drink', amount: 660, unit: 'ml' });
   const saved = (await listFoods(mockDb, { search: 'cola' }))[0];

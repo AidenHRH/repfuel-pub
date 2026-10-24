@@ -8,7 +8,7 @@ import { localTimeLabel } from '@/domain/dates';
 import { MAIN_MEALS } from '@/domain/dayStatus';
 import { amountLabel, kcalLabel } from '@/domain/format';
 import { MEAL_CATEGORIES } from '@/domain/meals';
-import { roundForDisplay, sumEntries, type DayTotals } from '@/domain/nutrition';
+import { roundForDisplay, sumEntries } from '@/domain/nutrition';
 import type { FoodLogEntry, MealCategory } from '@/domain/types';
 import { useTheme } from '@/theme/ThemeProvider';
 import { fonts, radii, spacing } from '@/theme/tokens';
@@ -21,11 +21,20 @@ const SECTION: Record<MealCategory, { label: string; log: string }> = {
   drink: { label: 'Drinks', log: 'Log a drink' },
 };
 
+/** At most this many photos on a meal's card; the rest are "+2". */
+const THUMBS = 5;
+
+export type PlannedMeal = { name: string; onLog: () => void };
+
 type Props = {
   entries: FoodLogEntry[];
   skipped: MealCategory[];
   /** Main meals that can be marked skipped now (past days, or today once the meal's time has gone). */
   canSkip: MealCategory[];
+  /** Today's planned dishes not logged yet, by meal: Log logs it in one tap. */
+  planned: Partial<Record<MealCategory, PlannedMeal>>;
+  /** View diary: every item listed under its meal, with swipe to edit or delete. */
+  diary: boolean;
   onLog: (meal: MealCategory) => void;
   onToggleSkipped: (meal: MealCategory, on: boolean) => void;
   onEdit: (entry: FoodLogEntry) => void;
@@ -33,73 +42,149 @@ type Props = {
   onLogAgain: (entry: FoodLogEntry) => void;
 };
 
-/** Breakfast, Lunch, Dinner, Snacks and Drinks, always in that order, each with its total and Log. */
-export function MealList({ entries, skipped, canSkip, onLog, onToggleSkipped, onEdit, onDelete, onLogAgain }: Props) {
+const entryLabel = (entry: FoodLogEntry) => {
+  const portion =
+    entry.amount === 1 && (entry.unit === 'portion' || entry.unit === 'serving')
+      ? ''
+      : `, ${amountLabel(entry.amount, entry.unit)}`;
+  return `${entry.name}, ${localTimeLabel(entry.loggedAt)}${portion}, ${kcalLabel(entry.nutrients, entry.isApproximate)}, ${roundForDisplay(entry.nutrients.proteinG, 'g')} grams protein`;
+};
+
+/** Breakfast, Lunch, Dinner, Snacks and Drinks as cards, always in that order: totals, photos and Log. */
+export function MealList({
+  entries,
+  skipped,
+  canSkip,
+  planned,
+  diary,
+  onLog,
+  onToggleSkipped,
+  onEdit,
+  onDelete,
+  onLogAgain,
+}: Props) {
   const { colors } = useTheme();
   return (
-    <View style={{ gap: spacing.md }}>
+    <View style={{ gap: spacing.sm + 2 }}>
       {MEAL_CATEGORIES.map((meal) => {
         const inMeal = entries.filter((e) => e.mealCategory === meal);
         const isSkipped = skipped.includes(meal) && inMeal.length === 0;
-        const totals = inMeal.length
-          ? sumEntries(inMeal.map((e) => ({ ...e.nutrients, isApproximate: e.isApproximate })))
-          : null;
+        const plan = inMeal.length === 0 ? planned[meal] : undefined;
+        const totals = inMeal.length ? sumEntries(inMeal.map((e) => ({ ...e.nutrients, isApproximate: e.isApproximate }))) : null;
+        const detail = totals
+          ? `${totals.approximate ? '≈ ' : ''}${roundForDisplay(totals.totals.kcal, 'kcal')} kcal · ${roundForDisplay(totals.totals.proteinG, 'g')} g protein`
+          : isSkipped
+            ? 'skipped'
+            : plan
+              ? `planned: ${plan.name}`
+              : meal === 'drink'
+                ? 'on their own'
+                : null;
         return (
-          <View key={meal} style={{ gap: spacing.sm }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.xs }}>
-              <Text variant="overline" color="text2" accessibilityRole="header">
-                {SECTION[meal].label}
-              </Text>
-              {totals ? (
-                <Text variant="caption" color="text2" numeric>
-                  {sectionTotals(totals)}
-                </Text>
-              ) : null}
-              <View style={{ flex: 1 }} />
-              {inMeal.length === 0 && MAIN_MEALS.includes(meal) && (isSkipped || canSkip.includes(meal)) ? (
+          <View key={meal} style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.md,
+                paddingHorizontal: spacing.lg,
+                paddingVertical: spacing.md,
+              }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={plan ? SECTION[meal].log : undefined}
+                accessible={!!plan}
+                disabled={!plan}
+                onPress={() => onLog(meal)}
+                style={{ flex: 1, gap: spacing.sm }}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 6 }}>
+                  <Text variant="headline" accessibilityRole="header">
+                    {SECTION[meal].label}
+                  </Text>
+                  {detail ? (
+                    <Text variant="caption" color="text2" numeric>
+                      {`· ${detail}`}
+                    </Text>
+                  ) : null}
+                </View>
+                {inMeal.length && !diary ? (
+                  <View style={{ flexDirection: 'row', gap: spacing.xs + 2 }}>
+                    {inMeal.slice(0, THUMBS).map((entry) => (
+                      <Pressable
+                        key={entry.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={entryLabel(entry)}
+                        accessibilityHint="Opens to adjust. Hold to log it again today."
+                        accessibilityActions={[
+                          { name: 'activate' },
+                          { name: 'edit', label: 'Edit' },
+                          { name: 'delete', label: 'Delete' },
+                          { name: 'longpress', label: 'Log again' },
+                        ]}
+                        onAccessibilityAction={(e) => {
+                          if (e.nativeEvent.actionName === 'delete') onDelete(entry);
+                          else if (e.nativeEvent.actionName === 'longpress') onLogAgain(entry);
+                          else onEdit(entry);
+                        }}
+                        onPress={() => onEdit(entry)}
+                        onLongPress={() => onLogAgain(entry)}
+                        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+                        <FoodThumb uri={entry.photo} name={entry.name} size={40} word />
+                      </Pressable>
+                    ))}
+                    {inMeal.length > THUMBS ? (
+                      <View
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 9,
+                          backgroundColor: colors.well,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                        <Text variant="caption" color="text2" numeric>{`+${inMeal.length - THUMBS}`}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
+              </Pressable>
+              {inMeal.length === 0 && MAIN_MEALS.includes(meal) && !plan && (isSkipped || canSkip.includes(meal)) ? (
                 <Pressable
                   accessibilityRole="switch"
                   accessibilityLabel={`Skipped ${SECTION[meal].label.toLowerCase()}`}
                   accessibilityState={{ checked: isSkipped }}
                   hitSlop={6}
                   onPress={() => onToggleSkipped(meal, !isSkipped)}
-                  style={{
-                    paddingHorizontal: spacing.sm,
-                    paddingVertical: 3,
-                    borderRadius: radii.pill,
-                    backgroundColor: isSkipped ? colors.well : 'transparent',
-                    borderWidth: 1,
-                    borderColor: isSkipped ? colors.well : colors.sep,
-                  }}>
+                  style={{ paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}>
                   <Text variant="caption" color="text2">
-                    {isSkipped ? 'Skipped ✓' : 'Skipped?'}
+                    {isSkipped ? 'Undo skip' : 'Skipped?'}
                   </Text>
                 </Pressable>
               ) : null}
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={SECTION[meal].log}
-                hitSlop={8}
-                onPress={() => onLog(meal)}
+                accessibilityLabel={plan ? `Log planned ${SECTION[meal].label.toLowerCase()}, ${plan.name}` : SECTION[meal].log}
+                hitSlop={6}
+                onPress={plan ? plan.onLog : () => onLog(meal)}
                 style={({ pressed }) => ({
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: 4,
+                  minHeight: 40,
+                  paddingHorizontal: spacing.lg + 2,
+                  justifyContent: 'center',
                   borderRadius: radii.pill,
-                  backgroundColor: colors.well,
-                  opacity: pressed ? 0.6 : 1,
+                  backgroundColor: plan ? colors.accent : colors.well,
+                  opacity: pressed ? 0.7 : 1,
                 })}>
-                <Text variant="caption" color="accent" style={{ fontFamily: fonts.semibold }}>
-                  + Log
+                <Text variant="callout" style={{ fontFamily: fonts.semibold, color: plan ? colors.onAccent : colors.accent }}>
+                  Log
                 </Text>
               </Pressable>
             </View>
-            {inMeal.length ? (
-              <View style={{ backgroundColor: colors.card, borderRadius: radii.card, overflow: 'hidden' }}>
-                {inMeal.map((entry, i) => (
+            {inMeal.length && diary ? (
+              <View>
+                {inMeal.map((entry) => (
                   <EntryRow
                     key={entry.id}
                     entry={entry}
-                    first={i === 0}
                     onEdit={() => onEdit(entry)}
                     onDelete={() => onDelete(entry)}
                     onLogAgain={() => onLogAgain(entry)}
@@ -114,20 +199,13 @@ export function MealList({ entries, skipped, canSkip, onLog, onToggleSkipped, on
   );
 }
 
-/** "452 kcal · 38 g"; ≈ when any entry is an estimate. */
-function sectionTotals({ totals, approximate }: DayTotals): string {
-  return `${approximate ? '≈ ' : ''}${roundForDisplay(totals.kcal, 'kcal')} kcal · ${roundForDisplay(totals.proteinG, 'g')} g`;
-}
-
 function EntryRow({
   entry,
-  first,
   onEdit,
   onDelete,
   onLogAgain,
 }: {
   entry: FoodLogEntry;
-  first: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onLogAgain: () => void;
@@ -144,7 +222,7 @@ function EntryRow({
     action();
   };
   return (
-    <View style={{ borderTopWidth: first ? 0 : 1, borderTopColor: colors.sep }}>
+    <View style={{ borderTopWidth: 1, borderTopColor: colors.sep }}>
       <ReanimatedSwipeable
         ref={swipeable}
         friction={1.6}

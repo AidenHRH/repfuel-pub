@@ -5,7 +5,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Sheet } from '@/components/Sheet';
 import { Text } from '@/components/Text';
-import { CREATINE_DOSES, creatineCaption, scoopsLabel } from '@/domain/creatine';
+import { CREATINE_DOSES, creatineCaption, scoopsLabel, topUp } from '@/domain/creatine';
 import { friendlyNumber } from '@/domain/format';
 import { timeLabel } from '@/domain/reminders';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -17,7 +17,7 @@ import { useReminder } from './useReminder';
  * Today's creatine: Taken tops today up to the daily amount (which skips today's notification); tap the name for
  * another amount (2.5, 5, 10 g), which adds to today; Taken ✓ clears a mistake. Hidden when the reminder is off.
  */
-export function TodayReminder() {
+export function TodayReminder({ row = false }: { row?: boolean } = {}) {
   const { colors } = useTheme();
   const { reminder, setDoneToday, takeDose } = useReminder('creatine');
   const [choosing, setChoosing] = useState(false);
@@ -31,8 +31,22 @@ export function TodayReminder() {
     creatineCaption({ done: reminder.doneToday, takenG: reminder.takenG, dailyG }) ??
     `Due ${timeLabel(reminder.hour, reminder.minute)}`;
 
+  // In Summary's Daily habits it's a row of that card; the button says what it adds ("+ 5 g").
+  const Wrap = row ? View : Card;
+  const add = topUp(reminder.takenG, dailyG) || dailyG;
   return (
-    <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md }}>
+    <Wrap
+      style={
+        row
+          ? {
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.md,
+              paddingHorizontal: spacing.lg,
+              paddingVertical: spacing.md,
+            }
+          : { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md }
+      }>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Choose how much ${name}`}
@@ -53,11 +67,14 @@ export function TodayReminder() {
           paddingHorizontal: spacing.lg,
           borderRadius: radii.pill,
           justifyContent: 'center',
-          backgroundColor: complete ? colors.well : colors.accent,
+          backgroundColor: complete || row ? colors.well : colors.accent,
           opacity: pressed ? 0.8 : 1,
         })}>
-        <Text variant="callout" style={{ fontFamily: fonts.semibold, color: complete ? colors.accent : colors.onAccent }}>
-          {complete ? 'Taken ✓' : 'Taken'}
+        <Text
+          variant="callout"
+          numeric
+          style={{ fontFamily: fonts.semibold, color: complete || row ? colors.accent : colors.onAccent }}>
+          {complete ? 'Taken ✓' : row ? `+ ${friendlyNumber(add)} g` : 'Taken'}
         </Text>
       </Pressable>
 
@@ -89,6 +106,6 @@ export function TodayReminder() {
           />
         ) : null}
       </Sheet>
-    </Card>
+    </Wrap>
   );
 }

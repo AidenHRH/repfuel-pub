@@ -133,7 +133,7 @@ test('Today has its own Log workout button, and confirms the PR there', async ()
   await fireEvent.changeText(screen.getByLabelText('Reps for set 1'), '5');
   await fireEvent.press(screen.getByRole('button', { name: /^Save / }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   expect(await screen.findByText('New PR · Heaviest ever: 85 kg (was 80 kg)')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'View' }));
   expect(await screen.findByRole('header', { name: 'Workouts' })).toBeTruthy();
@@ -152,7 +152,7 @@ test('editing a lift never shows the exercise picker', async () => {
 
 test('a lift logged from Workouts is not announced again on Today', async () => {
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   await fireEvent.press(screen.getByLabelText(/^Workouts, tab/));
   await screen.findByRole('header', { name: 'Workouts' });
   await fireEvent.press(screen.getAllByRole('button', { name: 'Log workout' }).at(-1)!);
@@ -164,7 +164,7 @@ test('a lift logged from Workouts is not announced again on Today', async () => 
   expect(await screen.findByText('Saved Barbell bench press')).toBeTruthy();
 
   await fireEvent.press(screen.getByLabelText(/^Summary, tab/));
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   expect(screen.queryByText('Saved Barbell bench press')).toBeNull();
 });
 

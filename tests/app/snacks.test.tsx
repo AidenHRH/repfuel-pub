@@ -20,7 +20,7 @@ afterEach(() => jest.useRealTimers());
 
 async function openToday() {
   await renderRouter(appDir, { initialUrl: '/' });
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
 }
 
 /** Snacks & drinks tiles live at the top of Log food. */
@@ -75,7 +75,7 @@ test('a saved food can be put in the row from its edit screen', async () => {
   await fireEvent(await screen.findByLabelText('Show in Snacks'), 'valueChange', true);
   await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   await fireEvent.press(screen.getByRole('button', { name: 'Log food' }));
   expect(await screen.findByRole('button', { name: 'Log 1 serving of whey' })).toBeTruthy();
 });
@@ -88,7 +88,7 @@ test('a saved drink can be put in the Drinks row from its edit screen', async ()
   await fireEvent(await screen.findByLabelText('Show in Drinks'), 'valueChange', true);
   await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
 
-  await screen.findByRole('header', { name: 'Summary' });
+  await screen.findByRole('button', { name: /^Choose a day/ });
   await fireEvent.press(screen.getByRole('button', { name: 'Log food' }));
   expect(await screen.findByRole('header', { name: 'Drinks' })).toBeTruthy();
 });
@@ -111,7 +111,7 @@ test('hold a tile to log half of it', async () => {
 
   await finishBasket();
   expect(await screen.findByText('Logged Chocolate bar')).toBeTruthy();
-  expect(screen.getByText('≈ 120 kcal · 2 g')).toBeTruthy();
+  expect(screen.getByText('· ≈ 120 kcal · 2 g protein')).toBeTruthy();
 });
 
 test('search for a snack, and keep it as a tile for next time', async () => {
@@ -131,9 +131,3 @@ test('search for a snack, and keep it as a tile for next time', async () => {
   expect(await screen.findByRole('button', { name: 'Log 350 ml of Latte' })).toBeTruthy();
 });
 
-test('Search next to Meals opens the search, ready to type', async () => {
-  await openToday();
-  await fireEvent.press(await screen.findByRole('button', { name: 'Search' }));
-  expect(await screen.findByRole('header', { name: 'Search food' })).toBeTruthy();
-  expect(screen.getByLabelText('Search foods and meals').props.autoFocus).toBe(true);
-});
