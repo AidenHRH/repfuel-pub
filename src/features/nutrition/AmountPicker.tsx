@@ -20,7 +20,8 @@ import { TourTarget } from '@/features/tour/TourTarget';
 
 const SERVINGS = PORTIONS.map(String);
 
-export type AmountFood = Pick<FoodProduct, 'basis' | 'servingSize' | 'presetId' | 'packSize'>;
+export type AmountFood = Pick<FoodProduct, 'basis' | 'servingSize' | 'presetId' | 'packSize'> &
+  Partial<Pick<FoodProduct, 'pieceG' | 'pieceLabel'>>;
 
 export type AmountState = ReturnType<typeof useAmount>;
 
@@ -71,6 +72,11 @@ export function useAmount(food: AmountFood | null, initial?: number) {
     setMeasureIndex(i);
     setAmountText(String(measures[i].grams));
   };
+  /** Selects a size the food has only just gained (a new piece size): its grams aren't in `measures` yet. */
+  const selectNewMeasure = (i: number, grams: number) => {
+    setMeasureIndex(i);
+    setAmountText(String(grams));
+  };
   const hint = valid && unit !== 'serving' ? packHint(amount, food?.packSize ?? null, unit) : null;
 
   return {
@@ -80,6 +86,7 @@ export function useAmount(food: AmountFood | null, initial?: number) {
     measure,
     measureIndex: Math.min(measureIndex, Math.max(0, measures.length - 1)),
     chooseMeasure,
+    selectNewMeasure,
     asAmount,
     amountText,
     setAmountText,

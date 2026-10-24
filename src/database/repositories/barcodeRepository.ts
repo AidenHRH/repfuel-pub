@@ -37,7 +37,10 @@ export async function cacheDraft(db: Db, barcode: string, draft: FoodDraft, sour
  * The saved food for a product found by search or scan, saving it on first use (with its picture). A food
  * already saved with that barcode is reused. Calories and protein must be known; otherwise check it first.
  */
-export async function saveProductFood(db: Db, product: { barcode: string | null; draft: FoodDraft }): Promise<FoodProduct> {
+export async function saveProductFood(
+  db: Db,
+  product: { barcode: string | null; draft: FoodDraft; piece?: { grams: number; label: string } },
+): Promise<FoodProduct> {
   const { draft } = product;
   // Search results can carry odd codes (padded, or not a retail barcode at all): keep only real ones.
   const barcode = product.barcode ? normaliseBarcode(product.barcode) : null;
@@ -52,6 +55,7 @@ export async function saveProductFood(db: Db, product: { barcode: string | null;
       ...(!existing.imageUrl && draft.imageUrl ? { imageUrl: draft.imageUrl } : {}),
       ...(!existing.health && draft.health ? { health: draft.health } : {}),
       ...(!existing.shop && draft.shop ? { shop: draft.shop } : {}),
+      ...(!existing.pieceG && product.piece ? { pieceG: product.piece.grams, pieceLabel: product.piece.label } : {}),
     };
     return Object.keys(patch).length ? updateFood(db, existing.id, patch) : existing;
   }
@@ -70,5 +74,7 @@ export async function saveProductFood(db: Db, product: { barcode: string | null;
     imageUrl: draft.imageUrl ?? null,
     health: draft.health ?? null,
     shop: draft.shop ?? null,
+    pieceG: product.piece?.grams ?? null,
+    pieceLabel: product.piece?.label ?? null,
   });
 }

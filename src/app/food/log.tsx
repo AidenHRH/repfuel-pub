@@ -12,7 +12,14 @@ import { Segmented } from '@/components/Segmented';
 import { Text } from '@/components/Text';
 import { useDb } from '@/database/DatabaseProvider';
 import { saveProductFood } from '@/database/repositories/barcodeRepository';
-import { getFood, savePresetFood, setFoodFavourite, setFoodShop, shopUnasked } from '@/database/repositories/foodRepository';
+import {
+  getFood,
+  savePresetFood,
+  setFoodFavourite,
+  setFoodShop,
+  setPieceSize,
+  shopUnasked,
+} from '@/database/repositories/foodRepository';
 import { isInDrinksRow, isInSnacksRow, setInDrinksRow, setInSnacksRow } from '@/database/repositories/snackRepository';
 import { getCommonFood } from '@/domain/commonFoods';
 import { isDrink } from '@/domain/drinks';
@@ -23,6 +30,7 @@ import type { FoodProduct, MealCategory } from '@/domain/types';
 import { logAndAnnounce, nutritionEvents } from '@/features/nutrition/events';
 import { AmountPicker, useAmount } from '@/features/nutrition/AmountPicker';
 import { HealthCard } from '@/features/nutrition/HealthCard';
+import { PieceSheet } from '@/features/nutrition/PieceSheet';
 import { ShopPicker } from '@/features/nutrition/ShopPicker';
 import { safely } from '@/features/safely';
 import type { FoodDraft } from '@/services/food-provider/types';
@@ -35,7 +43,8 @@ const CATEGORIES = MEAL_CATEGORIES;
 type Shown = Pick<
   FoodProduct,
   'name' | 'brand' | 'basis' | 'servingSize' | 'packSize' | 'nutrients' | 'dataSource' | 'imageUrl' | 'presetId' | 'health'
->;
+> &
+  Partial<Pick<FoodProduct, 'pieceG' | 'pieceLabel'>>;
 
 function parseDraft(json: string | undefined): FoodDraft | null {
   if (!json) return null;
@@ -71,6 +80,9 @@ export default function LogFoodAmountScreen() {
   const [shopAsk, setShopAsk] = useState(() => !!draft?.name && !params.id && !draft.shop);
   const [shop, setShop] = useState<string | null>(() => (params.id ? null : (draft?.shop ?? null)));
   const [shopSkipped, setShopSkipped] = useState(false);
+  // By the piece: asked once, kept on the food (a product not saved yet keeps it until it's logged).
+  const [piece, setPiece] = useState<{ grams: number; label: string } | null>(null);
+  const [askingPiece, setAskingPiece] = useState(false);
 
   const presetFromParams = params.preset ? getCommonFood(params.preset) : null;
   const food: Shown | null = saved
@@ -103,7 +115,8 @@ export default function LogFoodAmountScreen() {
           }
         : null;
 
-  const how = useAmount(food);
+  const shown: Shown | null = food && piece && !food.pieceG ? { ...food, pieceG: piece.grams, pieceLabel: piece.label } : food;
+  const how = useAmount(shown);
 
   useEffect(() => {
     if (!params.id) return;
@@ -143,7 +156,11 @@ export default function LogFoodAmountScreen() {
         saved ??
         (presetFromParams
           ? await savePresetFood(db, presetFromParams)
-          : await saveProductFood(db, { barcode: params.barcode || null, draft: { ...draft!, ...(shop ? { shop } : {}) } }));
+          : await saveProductFood(db, {
+              barcode: params.barcode || null,
+              draft: { ...draft!, ...(shop ? { shop } : {}) },
+              ...(piece ? { piece } : {}),
+            }));
       if (!saved && !presetFromParams && shopSkipped) await setFoodShop(db, target.id, null);
       if (keepTile && category === 'snack') await setInSnacksRow(db, target.id, true);
       if (keepTile && category === 'drink') await setInDrinksRow(db, target.id, true);
@@ -261,8 +278,28 @@ export default function LogFoodAmountScreen() {
             ? undefined
             : `Per 100 ${unit}: ${kcalLabel(food.nutrients, approximate)} · ${g(food.nutrients.proteinG)} protein · ${g(food.nutrients.carbsG)} carbs · ${g(food.nutrients.fatG)} fat${preset ? ' (typical values)' : ''}`
         }>
-        <AmountPicker food={food} state={how} />
+        <AmountPicker food={shown!} state={how} />
+        {!perServing && !shown!.pieceG && !presetFromParams ? (
+          <ListRow label="By the piece">
+            <Button variant="plain" label="Set up" accessibilityLabel="By the piece" onPress={() => setAskingPiece(true)} />
+          </ListRow>
+        ) : null}
       </ListGroup>
+
+      <PieceSheet
+        visible={askingPiece}
+        packSize={food.packSize}
+        unit={unit === 'ml' ? 'ml' : 'g'}
+        onClose={() => setAskingPiece(false)}
+        onSave={async (grams, label) => {
+          setAskingPiece(false);
+          if (saved) {
+            const updated = await safely('save the piece size', () => setPieceSize(db, saved.id, grams, label));
+            if (updated) setSaved(updated);
+          } else setPiece({ grams, label });
+          how.selectNewMeasure(0, grams);
+        }}
+      />
 
       <ListGroup title="Meal">
         <View style={{ padding: spacing.md }}>

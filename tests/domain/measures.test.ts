@@ -1,5 +1,5 @@
 import { getCommonFood } from '@/domain/commonFoods';
-import { foodMeasures, packHint } from '@/domain/measures';
+import { foodMeasures, packHint, pieceFromPack, readPieceWeight } from '@/domain/measures';
 
 const product = (basis: 'per_100g' | 'per_100ml' | 'per_serving', servingSize: number | null, packSize: number | null) => ({
   basis,
@@ -35,4 +35,23 @@ test('how much of the pack, when the pack size is known', () => {
   expect(packHint(150, 300, 'g')).toBe('150 g of a 300 g pack');
   expect(packHint(250, 1000, 'ml')).toBe('250 ml of a 1000 ml pack');
   expect(packHint(150, null, 'g')).toBeNull();
+});
+
+test('a food with a piece size offers one piece first', () => {
+  expect(foodMeasures({ ...product('per_100g', null, 175), pieceG: 5, pieceLabel: 'Malteser' })).toEqual([
+    { label: '1 Malteser', grams: 5 },
+    { label: '1 pack', grams: 175 },
+  ]);
+});
+
+test('one piece from the pack: 37 in a 175 g tub', () => {
+  expect(pieceFromPack(175, 37)).toBeCloseTo(4.73, 2);
+});
+
+test('a piece weight must be a number above 0', () => {
+  expect(readPieceWeight('4.5')).toBe(4.5);
+  expect(readPieceWeight('0')).toBeNull();
+  expect(readPieceWeight('')).toBeNull();
+  expect(readPieceWeight('lots')).toBeNull();
+  expect(readPieceWeight('-2')).toBeNull();
 });

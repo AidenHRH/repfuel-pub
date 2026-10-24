@@ -249,3 +249,10 @@ export async function shopUnasked(db: Db, id: string): Promise<boolean> {
   const row = await db.getFirst<{ shop: string | null }>('SELECT shop FROM food_product WHERE id = ?', [id]);
   return row ? row.shop === null : false;
 }
+
+/** Remembers what one piece of a food is called and weighs (g or ml), so it can be logged by the piece. */
+export async function setPieceSize(db: Db, id: string, grams: number, label: string): Promise<FoodProduct> {
+  if (!Number.isFinite(grams) || grams <= 0) throw new RangeError('A piece must weigh more than 0');
+  await db.run('UPDATE food_product SET piece_g = ?, piece_label = ?, updated_at = ? WHERE id = ?', [grams, label.trim() || 'piece', nowIso(), id]);
+  return (await getFood(db, id))!;
+}
