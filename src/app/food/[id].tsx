@@ -19,6 +19,7 @@ import {
   type FoodFormValues,
 } from '@/features/nutrition/foodForm';
 import { FoodFormView } from '@/features/nutrition/FoodFormView';
+import { ShopPicker } from '@/features/nutrition/ShopPicker';
 import { useTheme } from '@/theme/ThemeProvider';
 
 type TileRows = { snacks: boolean; drinks: boolean };
@@ -30,6 +31,7 @@ export default function EditFoodScreen() {
   const [original, setOriginal] = useState<FoodProduct | null>(null);
   const [values, setValues] = useState<FoodFormValues | null>(null);
   const [errors, setErrors] = useState<FoodFormErrors>({});
+  const [shop, setShop] = useState<string | null>(null);
   // The food's tiles on Log food, as loaded and as switched here.
   const [rows, setRows] = useState<{ was: TileRows; now: TileRows } | null>(null);
   const { colors } = useTheme();
@@ -40,6 +42,7 @@ export default function EditFoodScreen() {
       const was = { snacks: await isInSnacksRow(db, food.id), drinks: await isInDrinksRow(db, food.id) };
       setRows({ was, now: was });
       setOriginal(food);
+      setShop(food.shop);
       setValues(formFromFood(food));
     });
   }, [db, id]);
@@ -58,7 +61,10 @@ export default function EditFoodScreen() {
       return;
     }
     const saved = await safely(`save ${result.food.name}`, async () => {
-      const food = await updateFood(db, id, editedFood(original, result.food));
+      const food = await updateFood(db, id, {
+        ...editedFood(original, result.food),
+        ...(shop !== original.shop ? { shop } : {}),
+      });
       if (rows && rows.now.snacks !== rows.was.snacks) await setInSnacksRow(db, id, rows.now.snacks);
       if (rows && rows.now.drinks !== rows.was.drinks) await setInDrinksRow(db, id, rows.now.drinks);
       return food;
@@ -85,6 +91,7 @@ export default function EditFoodScreen() {
   return (
     <ModalScreen title="Edit food" onClose={() => router.back()} action={{ label: 'Save', onPress: save }}>
       <FoodFormView values={values} errors={errors} onChange={setValues} />
+      <ShopPicker value={shop} onChange={setShop} />
       <ListGroup footer="A tile on Log food: one tap logs it under Snacks or Drinks.">
         {(['snacks', 'drinks'] as const).map((row) => {
           const label = row === 'snacks' ? 'Show in Snacks' : 'Show in Drinks';

@@ -326,3 +326,11 @@ describe('sugar', () => {
     expect(draft.nutrients.sugarG).toBeNull();
   });
 });
+
+test('the shop comes from Open Food Facts’ stores, or the brand when it’s an own brand', () => {
+  const at = (brands: string, stores?: string) =>
+    parseOffProduct({ product: { product_name: 'Thighs', brands, stores, nutriments: { 'energy-kcal_100g': 180 } } })!;
+  expect(at('Ashfield Farm').shop).toBe('Aldi');
+  expect(at('Corner Butchers', 'Booths, Tesco').shop).toBe('Booths');
+  expect(at('Corner Butchers').shop).toBeUndefined();
+});

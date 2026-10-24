@@ -12,7 +12,7 @@ import { Segmented } from '@/components/Segmented';
 import { Text } from '@/components/Text';
 import { useDb } from '@/database/DatabaseProvider';
 import { saveProductFood } from '@/database/repositories/barcodeRepository';
-import { getFood, savePresetFood, setFoodFavourite } from '@/database/repositories/foodRepository';
+import { getFood, savePresetFood, setFoodFavourite, setFoodShop, shopUnasked } from '@/database/repositories/foodRepository';
 import { isInDrinksRow, isInSnacksRow, setInDrinksRow, setInSnacksRow } from '@/database/repositories/snackRepository';
 import { getCommonFood } from '@/domain/commonFoods';
 import { isDrink } from '@/domain/drinks';
@@ -23,6 +23,7 @@ import type { FoodProduct, MealCategory } from '@/domain/types';
 import { logAndAnnounce, nutritionEvents } from '@/features/nutrition/events';
 import { AmountPicker, useAmount } from '@/features/nutrition/AmountPicker';
 import { HealthCard } from '@/features/nutrition/HealthCard';
+import { ShopPicker } from '@/features/nutrition/ShopPicker';
 import { safely } from '@/features/safely';
 import type { FoodDraft } from '@/services/food-provider/types';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -66,6 +67,10 @@ export default function LogFoodAmountScreen() {
   const { colors } = useTheme();
   // The meal chosen here or by the screen that opened this; otherwise a drink goes to Drinks and food by the clock.
   const [picked, setCategory] = useState<MealCategory | null>(() => (isMeal(params.meal) ? params.meal : null));
+  // A pack with no known shop asks once, optionally: a pick or Skip is remembered on the food.
+  const [shopAsk, setShopAsk] = useState(() => !!draft?.name && !params.id && !draft.shop);
+  const [shop, setShop] = useState<string | null>(() => (params.id ? null : (draft?.shop ?? null)));
+  const [shopSkipped, setShopSkipped] = useState(false);
 
   const presetFromParams = params.preset ? getCommonFood(params.preset) : null;
   const food: Shown | null = saved
@@ -106,6 +111,8 @@ export default function LogFoodAmountScreen() {
       if (!loaded) return;
       setSaved(loaded);
       setAlreadyTile({ snack: await isInSnacksRow(db, loaded.id), drink: await isInDrinksRow(db, loaded.id) });
+      setShop(loaded.shop);
+      if (loaded.barcode && (await shopUnasked(db, loaded.id))) setShopAsk(true);
     });
   }, [db, params.id]);
 
@@ -136,7 +143,8 @@ export default function LogFoodAmountScreen() {
         saved ??
         (presetFromParams
           ? await savePresetFood(db, presetFromParams)
-          : await saveProductFood(db, { barcode: params.barcode || null, draft: draft! }));
+          : await saveProductFood(db, { barcode: params.barcode || null, draft: { ...draft!, ...(shop ? { shop } : {}) } }));
+      if (!saved && !presetFromParams && shopSkipped) await setFoodShop(db, target.id, null);
       if (keepTile && category === 'snack') await setInSnacksRow(db, target.id, true);
       if (keepTile && category === 'drink') await setInDrinksRow(db, target.id, true);
       if (!saved && favourite) await setFoodFavourite(db, target.id, true);
@@ -193,9 +201,9 @@ export default function LogFoodAmountScreen() {
             <Text variant="title" style={{ fontSize: 24, lineHeight: 30, fontFamily: fonts.bold }}>
               {food.name}
             </Text>
-            {food.brand ? (
+            {food.brand || shop ? (
               <Text variant="callout" color="text2">
-                {food.brand}
+                {[food.brand, shop].filter(Boolean).join(' · ')}
               </Text>
             ) : null}
           </View>
@@ -225,6 +233,26 @@ export default function LogFoodAmountScreen() {
       </View>
 
       {food.health ? <HealthCard info={food.health} /> : null}
+
+      {shopAsk ? (
+        <ShopPicker
+          value={shop}
+          onChange={(next) => {
+            setShop(next);
+            if (saved && next) {
+              setShopAsk(false);
+              void safely('save the shop', () => setFoodShop(db, saved.id, next)).then(() =>
+                nutritionEvents.emit({ type: 'changed' }),
+              );
+            }
+          }}
+          onSkip={() => {
+            setShopAsk(false);
+            setShopSkipped(true);
+            if (saved) void safely('skip the shop', () => setFoodShop(db, saved.id, null));
+          }}
+        />
+      ) : null}
 
       <ListGroup
         title={perServing ? 'Servings' : 'How much?'}

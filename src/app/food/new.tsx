@@ -8,7 +8,7 @@ import { ListGroup, ListRow } from '@/components/ListGroup';
 import { ModalScreen } from '@/components/ModalScreen';
 import { Text } from '@/components/Text';
 import { useDb } from '@/database/DatabaseProvider';
-import { createFood } from '@/database/repositories/foodRepository';
+import { createFood, setFoodShop } from '@/database/repositories/foodRepository';
 import { recipeNameTaken, saveFoodAsMeal } from '@/database/repositories/recipeRepository';
 import { logAndAnnounce, nutritionEvents } from '@/features/nutrition/events';
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/features/nutrition/foodForm';
 import { FoodFormView } from '@/features/nutrition/FoodFormView';
 import { pickIngredient } from '@/features/nutrition/ingredientPick';
+import { ShopPicker } from '@/features/nutrition/ShopPicker';
 import { safely } from '@/features/safely';
 import { MEAL_CATEGORIES } from '@/domain/meals';
 import type { MealCategory } from '@/domain/types';
@@ -62,6 +63,7 @@ export default function NewFoodScreen() {
   const [saveAsMeal, setSaveAsMeal] = useState(isQuick);
   const [values, setValues] = useState(() => (draft ? formFromDraft(draft) : emptyFoodForm({ approximate: isQuick })));
   const [errors, setErrors] = useState<FoodFormErrors>({});
+  const [shop, setShop] = useState<string | null>(draft?.shop ?? null);
 
   const save = async (andLog: boolean) => {
     const result = validateFoodForm(values);
@@ -76,6 +78,7 @@ export default function NewFoodScreen() {
       imageUrl: draft?.imageUrl ?? null,
       packSize: draft?.packSize ?? null,
       health: draft?.health ?? null,
+      shop,
     };
     const asMeal = isQuick && saveAsMeal && food.basis === 'per_serving';
     if (asMeal && (await recipeNameTaken(db, food.name).catch(() => false))) {
@@ -84,7 +87,12 @@ export default function NewFoodScreen() {
       });
       return;
     }
-    const saved = await safely(`save ${food.name}`, () => createFood(db, food));
+    const saved = await safely(`save ${food.name}`, async () => {
+      const created = await createFood(db, food);
+      // The question was on screen: no pick counts as skipped, so it isn't asked again.
+      if (!shop && !isQuick) await setFoodShop(db, created.id, null);
+      return created;
+    });
     if (!saved) return;
     if (forIngredient) {
       nutritionEvents.emit({ type: 'changed' });
@@ -139,6 +147,7 @@ export default function NewFoodScreen() {
         </Text>
       ) : null}
       <FoodFormView values={values} errors={errors} onChange={setValues} quick={isQuick} />
+      {isQuick ? null : <ShopPicker value={shop} onChange={setShop} />}
       {isQuick ? (
         <ListGroup footer="Keeps it in My meals on Today, ready to log again in one tap.">
           <ListRow label="Save to My meals">

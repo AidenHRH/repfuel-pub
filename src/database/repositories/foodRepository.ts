@@ -65,7 +65,8 @@ function toFood(row: Row): FoodProduct {
     imageUrl: row.image_url ?? null,
     presetId: row.preset_id ?? null,
     health: healthOf(row),
-    shop: row.shop ?? null,
+    // '' means asked and skipped: no shop, and don't ask again.
+    shop: row.shop || null,
     pieceG: row.piece_g ?? null,
     pieceLabel: row.piece_label ?? null,
     deletedAt: row.deleted_at,
@@ -184,13 +185,14 @@ export async function updateFood(db: Db, id: string, patch: Partial<NewFood>): P
       id,
     ],
   );
-  await db.run('UPDATE food_product SET sugar_g = ?, shop = ?, piece_g = ?, piece_label = ? WHERE id = ?', [
+  await db.run('UPDATE food_product SET sugar_g = ?, piece_g = ?, piece_label = ? WHERE id = ?', [
     n.sugarG ?? null,
-    next.shop ?? null,
     next.pieceG ?? null,
     next.pieceG ? (next.pieceLabel ?? null) : null,
     id,
   ]);
+  // Only a patch that names the shop changes it, so a skipped question stays skipped.
+  if ('shop' in patch) await setFoodShop(db, id, patch.shop ?? null);
   return (await getFood(db, id))!;
 }
 
@@ -235,4 +237,15 @@ export async function savePresetFood(db: Db, preset: CommonFood): Promise<FoodPr
     notes: 'Typical values',
     presetId: preset.id,
   });
+}
+
+/** Sets a food's shop; null records that the owner skipped the question, so it isn't asked again. */
+export async function setFoodShop(db: Db, id: string, shop: string | null): Promise<void> {
+  await db.run('UPDATE food_product SET shop = ?, updated_at = ? WHERE id = ?', [shop ?? '', nowIso(), id]);
+}
+
+/** True until the owner has picked a shop for this food or skipped the question. */
+export async function shopUnasked(db: Db, id: string): Promise<boolean> {
+  const row = await db.getFirst<{ shop: string | null }>('SELECT shop FROM food_product WHERE id = ?', [id]);
+  return row ? row.shop === null : false;
 }

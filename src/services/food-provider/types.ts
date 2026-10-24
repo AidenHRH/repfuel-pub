@@ -15,6 +15,8 @@ export type FoodDraft = {
   imageUrl?: string;
   /** Nutri-Score, processing and additives, when known. */
   health?: HealthInfo;
+  /** The shop, from its own brand or Open Food Facts' stores, when known. */
+  shop?: string;
 };
 
 /** A product found by name: its barcode (if any), picture, and draft. */

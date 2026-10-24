@@ -51,6 +51,7 @@ export async function saveProductFood(db: Db, product: { barcode: string | null;
       ...(existing.packSize === null && draft.packSize ? { packSize: draft.packSize } : {}),
       ...(!existing.imageUrl && draft.imageUrl ? { imageUrl: draft.imageUrl } : {}),
       ...(!existing.health && draft.health ? { health: draft.health } : {}),
+      ...(!existing.shop && draft.shop ? { shop: draft.shop } : {}),
     };
     return Object.keys(patch).length ? updateFood(db, existing.id, patch) : existing;
   }
@@ -68,5 +69,6 @@ export async function saveProductFood(db: Db, product: { barcode: string | null;
     notes: null,
     imageUrl: draft.imageUrl ?? null,
     health: draft.health ?? null,
+    shop: draft.shop ?? null,
   });
 }

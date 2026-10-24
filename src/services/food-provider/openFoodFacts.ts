@@ -1,5 +1,6 @@
 import appConfig from '../../../app.json';
 import { additiveCode, type HealthInfo, type Nova, type NutriScore } from '@/domain/health';
+import { shopFor } from '@/domain/shops';
 import type { Nutrients, NutritionBasis } from '@/domain/types';
 
 import type { FoodDraft, FoodProvider, LookupResult, SearchHit, SearchResult } from './types';
@@ -19,6 +20,7 @@ const FIELDS = [
   'nova_group',
   'additives_tags',
   'countries_tags',
+  'stores',
 ];
 
 const SEARCH_PAGE_SIZE = 24;
@@ -94,11 +96,14 @@ export function parseOffProduct(json: unknown): FoodDraft | null {
   const imageUrl = text(product.image_front_small_url);
   const health = healthOf(product);
 
+  const brand = text(product.brands)?.split(',')[0].trim() || null;
+  const shop = shopFor(brand, text(product.stores));
   return {
     ...(health ? { health } : {}),
+    ...(shop ? { shop } : {}),
     ...(imageUrl?.startsWith('https://') ? { imageUrl } : {}),
     name,
-    brand: text(product.brands)?.split(',')[0].trim() || null,
+    brand,
     basis: basisOf(product),
     servingSize: num(product.serving_quantity) || null,
     packSize: packSizeOf(product),
