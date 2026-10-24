@@ -1,6 +1,6 @@
 # RepFuel — product direction
 
-Last updated 2026-10-22. A note of where the owner wants RepFuel to go, so later stages are planned with it in mind.
+Last updated 2026-10-24. A note of where the owner wants RepFuel to go, so later stages are planned with it in mind.
 Nothing here is built yet unless it says so.
 
 ## Now: a personal app (built)
@@ -84,7 +84,18 @@ Design: `docs/superpowers/specs/2026-10-22-redesign-coaching-health-design.md`; 
   lifts), Lifts and Records, and search with muscle chips; a lift's page (1RM, heaviest, volume or effort, with
   effort-coloured dots; same weight getting easier; sessions with each set's effort); a muscle's page (strength,
   sets and effort, current PRs, lifts, workouts); the Workouts history shows each lift's effort and each day's.
-- Next: Health Connect with a Health screen
+- Done (0.23): the new look and looking back (`docs/superpowers/specs/2026-10-24-nutrition-redesign-design.md`):
+  Ember colours (coral actions, teal protein, amber calories; light and dark); Summary after MyFitnessPal: Today ▾ to
+  pick any day of the last five weeks, a streak, the week's dots (grey dashed nothing logged, part ring under way,
+  amber ring fully logged but goals missed, solid coral with a tick goals hit: protein reached and calories within
+  10%), a week view, calories and macros, "Drinks today" (liquid calories, wherever the drink was logged), Breakfast to
+  Drinks each with + Log (on a past day it adds to that day, at the meal's usual time), Skipped for a missed meal,
+  hold an item to log it again today in any meal, Daily habits (creatine, the day's sessions, Log workout); workouts
+  as sessions (a gap over an hour starts a new one, named from its muscles, e.g. "12:20 · Shoulders"; tap for its
+  sets; hold a lift to move it); Shuffle no longer offers a saved copy of a planned dish as a new dish.
+- Next (0.24 → 0.26, same design): logging step by step with a basket, real photos, shops and takeaways; goals,
+  rewards and a weekly review; meal planning on TheMealDB with honest macros and Gousto-style filters.
+- Then: Health Connect with a Health screen
   (smart scales, fitness trackers, running apps), then plans and coaching inside your training split.
 - Owner request (2026-10-22), being designed: meal prep as a recipe browser, "like Gousto but our own": browse
   meals that fit the goal, open one for a picture, ingredients, full macros, method and prep time, and choose
