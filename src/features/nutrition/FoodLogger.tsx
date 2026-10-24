@@ -21,7 +21,7 @@ import { roundForDisplay } from '@/domain/nutrition';
 import { rankHits } from '@/domain/searchRank';
 import type { NutriScore } from '@/domain/health';
 import type { FoodProduct, Loggable, MealCategory } from '@/domain/types';
-import { logAndAnnounce } from '@/features/nutrition/events';
+import { logAndAnnounce, enterLoggingDay } from '@/features/nutrition/events';
 import { NutriScoreBadge } from '@/features/nutrition/HealthCard';
 import { TileRow } from '@/features/nutrition/TileRow';
 import { useDrinkItems, useFavouriteItems, useSnackItems } from '@/features/nutrition/useQuickPicks';
@@ -107,7 +107,10 @@ const TITLES: Record<FoodLoggerMode, string> = { home: 'Log food', search: 'Sear
  * Best match, More results) and `saved` (saved meals, starred first). Anything logged here closes back to Summary.
  */
 export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
-  const params = useLocalSearchParams<{ meal?: string }>();
+  const params = useLocalSearchParams<{ meal?: string; day?: string }>();
+  // Opened for a past day (from Summary): everything logged in this flow goes to that day.
+  const forDay = params.day && /^\d{4}-\d{2}-\d{2}$/.test(params.day) ? params.day : null;
+  useEffect(() => enterLoggingDay(forDay), [forDay]);
   const db = useDb();
   const router = useRouter();
   const { colors } = useTheme();
@@ -239,9 +242,10 @@ export function FoodLogger({ mode }: { mode: FoodLoggerMode }) {
   // Saved meals lists meals only; a search lists everything of yours that matches.
   const listed = query ? items : (items?.filter((i) => i.food === null) ?? null);
   // The meal goes on to the side screens only when it was picked, so a drink there can still default to Drink.
-  const mealParam = mealPicked ? { meal: category } : {};
+  const dayParam = forDay ? { day: forDay } : {};
+  const mealParam = mealPicked ? { meal: category, ...dayParam } : dayParam;
   const common = searchCommonFoods(query);
-  const meal = { meal: category };
+  const meal = { meal: category, ...dayParam };
   const openAmount = (food: FoodProduct) => router.push({ pathname: '/food/log', params: { id: food.id, ...meal } });
   const logRecent = (item: Loggable) =>
     item.kind === 'food' && item.unit !== 'serving'
@@ -679,7 +683,11 @@ function Row({
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        {trailing === 'chevron' ? <ChevronIcon color={colors.accent} size={16} /> : <PlusIcon color={colors.onAccent} size={16} />}
+        {trailing === 'chevron' ? (
+          <ChevronIcon color={colors.accent} size={16} />
+        ) : (
+          <PlusIcon color={colors.onAccent} size={16} />
+        )}
       </View>
     </Pressable>
   );

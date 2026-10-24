@@ -2,6 +2,8 @@ import * as Haptics from 'expo-haptics';
 
 import type { Db } from '@/database/Db';
 import { logLoggable } from '@/database/repositories/foodLogRepository';
+import { logTimeFor } from '@/domain/dayStatus';
+import { mealCategoryFor } from '@/domain/meals';
 import type { FoodLogEntry, MealCategory } from '@/domain/types';
 
 type NutritionEvent = { type: 'changed' } | { type: 'logged'; entry: FoodLogEntry } | { type: 'deleted'; entry: FoodLogEntry };
@@ -23,13 +25,30 @@ export const nutritionEvents = {
 };
 
 /** Logs a saved food or meal, with a light tap of haptics, and tells Today to show it with Undo. */
+/**
+ * The day the open Log food flow is adding to (a past day opened from Summary), or null for today. Set by Log food
+ * while it's open, so every way of adding inside it (search, scan, tiles, Build a meal) logs to that day.
+ */
+let loggingDay: string | null = null;
+
+/** Sets the day while a Log food screen is open; the returned function puts back whatever was set before it. */
+export function enterLoggingDay(day: string | null): () => void {
+  const previous = loggingDay;
+  loggingDay = day;
+  return () => {
+    loggingDay = previous;
+  };
+}
+
 export async function logAndAnnounce(
   db: Db,
   item: { kind: 'food' | 'recipe'; id: string },
   amount: number,
   mealCategory?: MealCategory,
 ): Promise<FoodLogEntry> {
-  return announce(await logLoggable(db, item, amount, new Date(), mealCategory));
+  const now = new Date();
+  const meal = mealCategory ?? mealCategoryFor(now);
+  return announce(await logLoggable(db, item, amount, logTimeFor(loggingDay ?? undefined, meal, now), meal));
 }
 
 /** Tells Today about an entry logged elsewhere (e.g. from the meal plan), with haptics and Undo. */

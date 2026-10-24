@@ -38,6 +38,17 @@ export async function getCurrentTargets(db: Db, at: Date = new Date()): Promise<
   return toTargets(row);
 }
 
+/** The targets for a day: those in effect then, or the first ever set for days before any were (a new install). */
+export async function targetsOn(db: Db, at: Date): Promise<NutritionTargets> {
+  const row =
+    (await db.getFirst<Row>(
+      'SELECT * FROM nutrition_targets WHERE effective_from <= ? ORDER BY effective_from DESC, updated_at DESC LIMIT 1',
+      [at.toISOString()],
+    )) ?? (await db.getFirst<Row>('SELECT * FROM nutrition_targets ORDER BY effective_from, updated_at LIMIT 1'));
+  if (!row) throw new Error('No nutrition targets found; migrations have not run.');
+  return toTargets(row);
+}
+
 export async function setTargets(db: Db, targets: Omit<NutritionTargets, 'id' | 'updatedAt'>): Promise<NutritionTargets> {
   const id = newId();
   await db.run(
